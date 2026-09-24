@@ -1,0 +1,16 @@
+{
+  "name": "phased-dev",
+  "owner": {
+    "name": "Ondrej Rysavy"
+  },
+  "metadata": {
+    "description": "The phased-dev development method: skills and templates for concept-to-release projects built with Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "phased-dev",
+      "source": "./plugins/phased-dev",
+      "description": "A phased, gate-driven development method for agent-built software: conceive, specify, plan, implement, gate, document. Two profiles: production (full verification) and prototype (lean harness, batched work, out-of-scope register)."
+    }
+  ]
+}

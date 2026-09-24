@@ -1,0 +1,7 @@
+{
+  "name": "phased-dev",
+  "version": "0.1.0",
+  "description": "A phased, gate-driven development method for agent-built software: conceive, specify, plan, implement, gate, document. Two profiles: production (full verification) and prototype (lean harness, batched work, out-of-scope register).",
+  "author": { "name": "Ondrej Rysavy" },
+  "keywords": ["methodology", "planning", "testing", "verification", "prototype"]
+}
