@@ -10,13 +10,16 @@ measured failure (`plugins/phased-dev/skills/method/references/lessons.md`).
 ## Install
 
 ```bash
-claude plugin marketplace add /root/phased-dev
+claude plugin marketplace add rysavy-ondrej/phased-dev
 claude plugin install phased-dev@phased-dev
 ```
 
-Or, inside Claude Code: `/plugin marketplace add /root/phased-dev`, then
-`/plugin install phased-dev@phased-dev`. Push this folder to a git host to share
-it; the marketplace can then be added by its URL.
+Or, inside Claude Code: `/plugin marketplace add rysavy-ondrej/phased-dev`, then
+`/plugin install phased-dev@phased-dev`. While the repository is private, the
+machine needs git access to it (e.g. `gh auth login`).
+
+To work on the plugin itself, clone it and add the local checkout instead:
+`claude plugin marketplace add ./phased-dev`.
 
 ## Lifecycle
 
