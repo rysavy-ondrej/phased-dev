@@ -23,10 +23,14 @@ To work on the plugin itself, clone it and add the local checkout instead:
 
 ## The flow
 
-1. **Concept** — the owner writes `docs/CONCEPT.md` in their own words.
-2. **Spec** — derived from the concept: architecture, languages, frameworks,
-   allowed libraries, interfaces, behaviour. Open questions are answered by the
-   owner before it is confirmed.
+1. **Concept** — the owner writes `docs/CONCEPT.md` in their own words; it can
+   be abstract.
+2. **Spec** — designed top-down and interactively: understanding and scope →
+   architecture and component boundaries → technology (language, SDK,
+   frameworks, database, UI, platform) → each component's contract and pattern →
+   cross-cutting rules. At each level the agent proposes viable options with
+   trade-offs; the owner chooses or suggests their own, and confirms the level
+   before the next begins.
 3. **Plan** — proposes which parts of the spec are built in which **mode**, then
    phases 1..N with subphases A, B, C.
 4. **Implementation**, phase by phase: prepare (fix task order, answer questions)
@@ -50,8 +54,8 @@ relaxes honesty of the output, tests that can fail, commit per task, or
 | Skill | When |
 | --- | --- |
 | `/phased-dev:method` | overview; what comes next |
-| `/phased-dev:start` | begin from concept notes: scaffold, find gaps, ask |
-| `/phased-dev:specify` | concept → `docs/SPEC.md`, `CLAUDE.md` |
+| `/phased-dev:start` | begin from concept notes: scaffold, note what the concept decides |
+| `/phased-dev:specify` | design the spec with the owner, level by level; resumes at the first unconfirmed level |
 | `/phased-dev:plan` | spec → mode allocation, phases, tasks |
 | `/phased-dev:prepare-phase` | before each phase: order, groups, questions answered, gate script |
 | `/phased-dev:implement` | implement a phase: task → commit → verify → ☑, progress after each |

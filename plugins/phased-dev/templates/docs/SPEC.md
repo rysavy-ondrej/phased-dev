@@ -1,61 +1,116 @@
 # Specification
 
-Derived from `CONCEPT.md`. It adds what the concept leaves open: the
-architecture, the technology, the allowed libraries, the precise behaviour. It is
-**final** when every question in `QUESTIONS.md` tagged `spec` is answered and the
-owner has confirmed this file.
+Designed **top-down** from `CONCEPT.md` by the agent, **decided by the owner**
+(`specify` skill). Each level is proposed with options, confirmed by the owner,
+and only then does the next level start. The spec is complete when every level
+is confirmed; it must be detailed enough that implementing a task means filling
+in a box whose edges are already fixed.
 
-Status: draft | confirmed by owner on {{date}}
+## Progress
 
-## 1. Scope
+| Level | Section | Status |
+| --- | --- | --- |
+| 0 | Understanding and scope | not started |
+| 1 | Architecture | not started |
+| 2 | Technology | not started |
+| 3 | Components and contracts | not started |
+| 3.x | {{one row per component, added at level 1}} | not started |
+| 4 | Cross-cutting rules | not started |
 
-In scope (from the concept): … Out of scope: … (items the owner wants in a later
-cycle are `F-n` entries in `FEATURES.md`).
+Statuses: *not started* · *proposed* (waiting for the owner) · *confirmed
+<date>* · *reopened* (a later level found a problem — see the decision log).
 
-## 2. Modules and contracts
+---
 
-The goal of this section: implementing any task means filling in a box whose
-edges are already fixed. Defined **before** the plan, and built first.
+## 1. Understanding and scope (level 0)
 
-### 2.1 Decomposition
+The agent's restatement of the concept, confirmed by the owner. The concept may
+be abstract; this is where it becomes concrete.
 
-A short description and a diagram of the modules and the data flow. Decompose
-until each module has **one responsibility** that fits in a sentence; a module
-whose description needs "and" is two modules.
+- **Goal:** {{one sentence}}
+- **Users and consumers of the output:** …
+- **Main functionality** (use cases, one line each):
+  1. …
+- **In scope for this cycle:** … **Out of scope:** … (later wishes are `F-n`
+  entries in `FEATURES.md`)
+- **The prototype demonstrates:** {{the end-to-end scenario}}
+- **The authority** (what decides correctness): …
+- **Priorities when they conflict:** 1. … 2. … 3. …
 
-| Module | Responsibility (one sentence) | Depends on | Location |
+## 2. Architecture (level 1)
+
+### 2.1 Style and overview
+
+The architectural style chosen and why (pipeline, layered, client–server,
+event-driven, plugin host …), with a diagram of the components and the data
+flow.
+
+### 2.2 Components
+
+Each with **one responsibility** (a description that needs "and" is two).
+
+| Component | Responsibility (one sentence) | Depends on |
+| --- | --- | --- |
+
+### 2.3 Boundaries
+
+Which component talks to which, in which direction, exchanging what. Names only
+at this level — the full contracts are level 3. Include the boundaries to the
+outside world (user interface, files, network, database).
+
+| Boundary | Between | Direction | Carries |
 | --- | --- | --- | --- |
 
-### 2.2 Contracts
+## 3. Technology (level 2)
 
-One entry per boundary between modules, written in the project's language:
+Pre-filled from the concept where it names something; every row confirmed.
 
-```
-<the interface / trait / abstract class / typed signatures, exactly as it will be
-written in code>
-```
+| Concern | Choice | Version | Why | Source (concept / option chosen) |
+| --- | --- | --- | --- | --- |
+| Language(s) | | | | |
+| SDK / runtime | | | | |
+| Framework(s) | | | | |
+| Database / storage | | | | |
+| User interface | | | | |
+| Target platform(s) and deployment | | | | |
+| Build and packaging | | | | |
+| Test tooling, lint | | | | |
 
-- **Provided by / used by:** …
-- **Inputs, outputs:** types and meaning; units; valid ranges.
-- **Errors:** which, when, and what the caller does with each.
-- **Pre/postconditions and invariants:** …
-- **Ownership and lifetime:** who allocates, who frees, what may be borrowed.
-- **Example:** one call and its result.
-- **Contract test:** what every implementation must pass.
+### 3.1 Allowed libraries
 
-### 2.3 Patterns
+Nothing outside this table is used. Adding a row is a question for the owner.
 
-| Where | Pattern | Why this one | Not to be confused with |
-| --- | --- | --- | --- |
-| {{input sources}} | Adapter | several sources, one interface | — |
+| Library | Version | Used for | Where it may be used | Licence |
+| --- | --- | --- | --- | --- |
 
-Only patterns that earn their place: a pattern that adds a layer without
-removing a decision is not used.
+## 4. Components and contracts (level 3)
 
-### 2.4 Complexity budget
+One subsection per component, in the order the plan will build them.
 
-Limits every module, class and function stays within, enforced by lint where the
-language allows:
+### 4.1 {{Component}}
+
+- **Responsibility:** (from 2.2)
+- **Pattern:** {{e.g. Adapter}} — why this one, what it saves the implementer
+- **Contract** (as it will be written in code):
+
+  ```
+  <interface / trait / abstract class / typed signatures>
+  ```
+
+  - Inputs, outputs: types, meaning, units, valid ranges
+  - Errors: which, when, what the caller does with each
+  - Pre/postconditions and invariants
+  - Ownership and lifetime
+  - Example: one call and its result
+  - Contract test: what every implementation must pass
+- **Behaviour rules:** precise enough to write a test from, each citing the
+  authority. An unobserved rule is marked *hypothesis*.
+- **External interface** (if the component faces the outside): CLI / API / UI /
+  file format, with an example.
+
+## 5. Cross-cutting rules (level 4)
+
+### 5.1 Complexity budget
 
 | Measure | Limit | Enforced by |
 | --- | --- | --- |
@@ -63,44 +118,28 @@ language allows:
 | nesting depth / cyclomatic complexity | {{e.g. 4 / 10}} | |
 | parameters per function | {{e.g. 5}} | |
 | module size | {{e.g. 500 lines}} | |
-| dependencies of a module on other modules | {{e.g. ≤ 3, no cycles}} | |
+| dependencies of a component on others | {{e.g. ≤ 3, no cycles}} | |
 
-## 3. Technology
+### 5.2 Error handling, logging, configuration
 
-| | Choice | Why | Decided by |
-| --- | --- | --- | --- |
-| Language(s) | | | |
-| Framework(s) | | | |
-| Build / packaging | | | |
-| Target platforms | | | |
-| Test tooling | | | |
+One policy each, applied everywhere.
 
-## 4. Allowed libraries
-
-Nothing outside this table is used. Adding a row is a question for the owner.
-
-| Library | Version | Used for | Where it may be used (e.g. not on the hot path) | Licence |
-| --- | --- | --- | --- | --- |
-
-## 5. Interfaces
-
-Inputs, outputs, command line / API, file formats, with examples.
-
-## 6. Behaviour
-
-The rules that decide the output, precisely enough to write a test from, each
-citing the authority. The ones a sensible design gets wrong by default are
-copied into `CLAUDE.md` → *Invariants*.
-
-## 7. Quality targets per mode
+### 5.3 Quality targets per mode
 
 | | prototype | harnessing | production |
 | --- | --- | --- | --- |
-| Correctness evidence | smoke run on sample data | conformance comparison on the full test data | same, plus fuzzing |
+| Correctness evidence | demonstration on sample data | conformance on the full test data | + fuzzing |
 | Performance | not measured | measured, recorded | target: … |
-| Robustness | refuses unsupported input visibly | malformed-input tests | hostile-input tests, bounded resources |
+| Robustness | refuses unsupported input visibly | edge and malformed input | hostile input, bounded resources |
 
-## 8. Decisions
+---
 
-| # | Decision | Reason / measurement | Owner ruling (date) | Reopen if |
-| --- | --- | --- | --- | --- |
+## Decision log
+
+Every design decision at every level. The owner decides; the agent decides only
+what is **obvious** (one viable option given what is already confirmed), and
+lists those for the owner's veto when the level is confirmed.
+
+| # | Level | Question | Options considered | Chosen | Decided by | Date |
+| --- | --- | --- | --- | --- | --- | --- |
+| D-1 | 1 | {{architectural style}} | pipeline · layered · event-driven | pipeline | owner | {{date}} |

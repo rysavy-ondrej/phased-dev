@@ -18,6 +18,9 @@ git status --porcelain
 
 Also read:
 - `docs/STATUS.md` → mode, *Current run* (paused? why? reset time?), next action;
+- **before implementation starts** (mode: specification): `docs/SPEC.md` →
+  *Progress* (which level is confirmed, which is proposed and waiting for the
+  owner) and the last rows of its *Decision log*;
 - `docs/QUESTIONS.md` → *Open*, for each open question's options and the
   assumption work is proceeding on;
 - `docs/FEATURES.md` → entries with `Disposition: proposed`;
@@ -30,7 +33,9 @@ the plan's markers and `docs/` by hand, and say so.
 
 Keep it short and in this order:
 
-1. **Where**: mode, phase/subphase, `x/y tasks verified` for the current phase,
+1. **Where**: in specification — the level reached, which level waits for the
+   owner's decision and on what (`Level 1 — architecture: proposed, 2 decision
+   points open`). In implementation — mode, phase/subphase, `x/y tasks verified` for the current phase,
    and whether the previous phase is pushed. One compact table of phases in the
    current mode if there are several.
 2. **State of the run**: running / paused (reason, reset time) / blocked (on
@@ -39,8 +44,9 @@ Keep it short and in this order:
    `Q-7 [BLOCKING] Which output encoding? — affects phase 2 — recommended: UTF-8`.
    For non-blocking ones, the assumption in force. Say which must be answered
    before the next phase can be prepared.
-4. **Awaiting the owner**: features with a `proposed` disposition, a push
-   waiting for confirmation, a spec or allocation not yet confirmed.
+4. **Awaiting the owner**: spec decision points and levels to confirm, features
+   with a `proposed` disposition, a push waiting for confirmation, a mode
+   allocation not yet confirmed.
 5. **Next step**: from `scripts/progress.sh next`.
 
 Offer to answer the open questions now (AskUserQuestion, one round) — answering

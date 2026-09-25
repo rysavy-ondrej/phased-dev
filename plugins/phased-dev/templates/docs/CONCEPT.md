@@ -3,9 +3,14 @@
 <!--
 Written by the owner, in your own words. This is the starting point: everything
 else is derived from it, and nothing derived may contradict it without your
-agreement. Free-form notes are fine — the `start` skill reads them, points out
-what is missing, and turns the gaps into questions. The headings below are the
-ones it looks for; skip any you cannot answer yet.
+agreement.
+
+It can be short and abstract — the goal and the main functionality are enough to
+start. The specification is then designed from it top-down, with you deciding at
+each level (scope, architecture, technology, components). Anything you already
+know — a language, a database, a UI, a target platform, a reference to match —
+write it down: it becomes a pre-filled choice you confirm instead of a question.
+The headings below are suggestions; skip any you cannot answer yet.
 -->
 
 ## Purpose

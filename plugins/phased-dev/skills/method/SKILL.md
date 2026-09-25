@@ -18,10 +18,13 @@ Extracted from maestro-enjoy, where every rule was bought by a measured failure 
 ## The flow
 
 ```
-CONCEPT.md ──start──▶ questions ──specify──▶ SPEC.md ──plan──▶ IMPLEMENTATION_PLAN.md
- (owner)                (owner answers)       (owner confirms)   (mode allocation, phases)
-                                                                          │
-      ┌──────────────────── for each phase 1..N ───────────────────────────┘
+CONCEPT.md ─start─▶ specify ─────────────────────────────▶ SPEC.md ─plan─▶ IMPLEMENTATION_PLAN.md
+ (owner; may        level 0 scope → 1 architecture         (every level    (mode allocation,
+  be abstract)      → 2 technology → 3 components          confirmed)       phases 1..N)
+                    → 4 cross-cutting                                              │
+                    agent proposes options, owner decides                          │
+                                                                                   │
+      ┌──────────────────────────── for each phase ────────────────────────────────┘
       ▼
  prepare-phase ──▶ implement (task → commit → verify → ☑, per task) ──▶ gate ──▶ push
       ▲                 │  questions → question    new features → feature
@@ -31,8 +34,8 @@ CONCEPT.md ──start──▶ questions ──specify──▶ SPEC.md ──p
 
 | Step | Skill | Input → output | Done when |
 | --- | --- | --- | --- |
-| 1 | `start` | owner's `docs/CONCEPT.md` → scaffolded repo, gaps as `Q-n` questions | the owner has answered the concept questions |
-| 2 | `specify` | concept + answers → `docs/SPEC.md` (architecture, languages, frameworks, allowed libraries, interfaces, behaviour), `CLAUDE.md` filled | every `spec` question answered; owner confirms the spec |
+| 1 | `start` | owner's `docs/CONCEPT.md` (may be abstract) → scaffolded repo, what the concept already decides | handed over to `specify` |
+| 2 | `specify` | concept → `docs/SPEC.md`, designed **top-down and interactively**: level 0 scope → 1 architecture and boundaries → 2 technology → 3 component contracts and patterns → 4 cross-cutting rules; agent proposes options, owner decides at each level | every level confirmed by the owner |
 | 3 | `plan` | spec → `docs/IMPLEMENTATION_PLAN.md`: **mode allocation**, phases 1..N, subphases, tasks | owner confirms which work goes in which mode |
 | 4 | `prepare-phase` | a phase → fixed task order, dependencies, groups, answered questions, gate script | `Prepared: <date>` in the plan |
 | 5 | `implement` | prepared phase → one commit per task, each verified (☐ → ◐ → ☑) | every task ☑ |
@@ -74,8 +77,10 @@ fail, one commit per task, failure is a stop.
 
 ## Rules that hold in every step
 
-- The owner writes the concept and answers questions; agents derive, propose and
-  ask. Owner decisions are dated.
+- The owner writes the concept and makes the decisions; the agent designs,
+  proposes viable options with trade-offs, and asks. Only obvious choices (one
+  viable option) are the agent's, and they are logged for the owner's veto.
+  Owner decisions are dated.
 - `CLAUDE.md` is the single home of a rule; skills and prompts name it.
 - The authority wins over prose and judgement.
 - Commit after every task, push after every phase.

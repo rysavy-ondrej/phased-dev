@@ -57,7 +57,7 @@ Prepared: {{date}}
 
 ### Subphase 1A — Boundaries (walking skeleton)
 
-Every contract from `SPEC.md` §2.2 as code, each with the simplest
+Every contract from `SPEC.md` §4 as code, each with the simplest
 implementation that lets data flow end to end, plus the contract tests.
 
 - ☐ **T1.1 {{Title}}.** {{Requirement, precise enough that a verifier can quote

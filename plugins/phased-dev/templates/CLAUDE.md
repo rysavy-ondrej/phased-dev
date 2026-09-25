@@ -7,7 +7,7 @@ is the one place a rule lives; prompts name a rule, they do not restate it.
 | Document | Role | Written by |
 | --- | --- | --- |
 | `docs/CONCEPT.md` | why the project exists, what it must do — the starting point | the owner (human) |
-| `docs/SPEC.md` | how: architecture, languages, frameworks, allowed libraries, interfaces, answered questions | derived from the concept, confirmed by the owner |
+| `docs/SPEC.md` | how: architecture, technology, allowed libraries, component contracts, patterns, decision log | designed by the agent level by level; every major decision the owner's |
 | `docs/IMPLEMENTATION_PLAN.md` | phases, subphases, ordered tasks, modes, exit criteria | derived from the spec |
 | this file | the rules every agent follows | derived from all three |
 
@@ -27,8 +27,8 @@ This is about **proportionate effort**, not about preferring slow code. When the
 efficient shape is the natural one to write, it is simply the right code. What is
 not warranted is *disproportionate* effort — elaborate machinery, new failure
 modes, new invariants — for a gain nobody has measured a need for. Write the
-plain version, record the choice and its measured cost in `docs/SPEC.md`
-*Decisions*, and leave optimisation to a production phase with a benchmark.
+plain version, record the choice and its measured cost in the spec's
+*Decision log*, and leave optimisation to a production phase with a benchmark.
 
 ## The prime directive: {{PRIME}}
 
@@ -59,7 +59,7 @@ Summarised from `docs/SPEC.md`, which is authoritative:
 
 ## Design rules
 
-The spec (`docs/SPEC.md` → *Modules and contracts*) is detailed enough that
+The spec (`docs/SPEC.md` → *Components and contracts*) is detailed enough that
 implementing a task is filling in a well-defined box, not designing one.
 
 1. **Boundaries first.** The modules and the boundaries between them are defined
@@ -74,10 +74,10 @@ implementing a task is filling in a well-defined box, not designing one.
    another module depends on is a question for the owner (`docs/QUESTIONS.md`),
    answered before the change, and the spec is updated in the same commit.
 4. **Named design patterns.** Each module states the pattern it follows and why
-   (the spec's *Patterns* table) — e.g. Strategy for interchangeable algorithms,
+   (each component's *Pattern* in the spec) — e.g. Strategy for interchangeable algorithms,
    Adapter behind an external source, Pipeline for staged processing, Factory
    where the concrete type is chosen by configuration. Use the pattern the spec
-   names; a pattern not in the table is a question, not an improvisation.
+   names; a pattern the spec does not name is a question, not an improvisation.
 5. **Keep every part simple.** One responsibility per module, class and function.
    The limits in the spec's *Complexity budget* (function length, nesting,
    parameters, dependencies per module) apply to all code; when a part grows past

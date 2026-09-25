@@ -1,6 +1,6 @@
 ---
 name: start
-description: Step 1 of the phased-dev method — take the owner's concept notes (docs/CONCEPT.md, written by a human), scaffold the repository with the method's templates, check the concept for gaps and contradictions, and turn them into questions for the owner. Use when beginning a project from concept notes, or when the user wants to set up a repository with this method.
+description: Step 1 of the phased-dev method — take the owner's concept notes (docs/CONCEPT.md, written by a human, possibly abstract), scaffold the repository with the method's templates, note what the concept already decides, and hand over to the interactive specification. Use when beginning a project from concept notes, or when the user wants to set up a repository with this method.
 ---
 
 # Start
@@ -31,37 +31,28 @@ It never overwrites an existing file, so the owner's concept is safe. If the
 project already has a `CLAUDE.md`, merge the template's sections into it. Ask
 before `git init` in a directory that is not a repository.
 
-## 3. Read the concept for gaps
+## 3. Read the concept — do not interrogate it
 
-Check it against what the later steps need. For each, is it stated, implied, or
-missing?
+Concept notes are often abstract: a goal, the main functionality, a few
+preferences. **That is expected, not a defect.** Filling the gaps is the
+specification's job, done level by level with the owner (`specify`), not a
+questionnaire here.
 
-- purpose and consumer of the output
-- **the authority** — what decides correctness (reference implementation,
-  standard, golden outputs, or the concept itself)
-- must-do list, and what is out of scope
-- **what the prototype must demonstrate** (the first milestone)
-- constraints: platform, language, libraries, data, deployment
-- priorities when goals conflict (default: correctness > honesty/robustness >
-  simplicity > speed)
+Read the notes and extract, for the specification to start from:
+- **the goal** in one sentence, and the main functionality as the owner states it;
+- **what the concept already decides** — language, SDK, database, UI, platform,
+  an authority (reference implementation, standard, expected outputs), a
+  constraint on data or deployment. These become *pre-filled* choices at the
+  matching spec level, confirmed there;
+- **contradictions** between statements — note them for level 0.
 
-Also look for **contradictions** between statements, and for requirements too
-vague to test ("fast", "robust") — ask for a number or an example.
+Ask the owner something now **only** if the goal itself cannot be stated — then
+one question, asking for it. Everything else waits for its level.
 
-## 4. Write the questions
+## 4. Hand over
 
-Each gap, contradiction or vague requirement becomes an entry in
-`docs/QUESTIONS.md` → *Open*, tagged `Affects: concept` or `Affects: spec`, with
-options and a recommendation where you can give one. Keep them few and sharp —
-merge related gaps; do not ask what the concept already answers.
-
-Ask them in one round (AskUserQuestion for the ones with clear options, plain
-text for the rest). Record each answer under *Answered* with the date. If an
-answer changes the concept, propose the edit to `docs/CONCEPT.md` and let the
-owner accept it — it stays their document.
-
-## 5. Hand over
-
-Fill the top of `CLAUDE.md` (*What this project is*, *What wins when they
-conflict*, the authority paragraph) from the concept. Set `docs/STATUS.md` to
-"Mode: specification". Then `specify`.
+Set `docs/STATUS.md` → "Mode: specification, level 0". Tell the owner in a few
+lines: what you understood the goal to be, what the concept already decides, and
+that the specification will now be designed top-down with them — understanding
+and scope, architecture, technology, components, cross-cutting rules — with
+their decision at each level. Then `specify`.
