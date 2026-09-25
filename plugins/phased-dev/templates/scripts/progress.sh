@@ -53,7 +53,8 @@ echo
 open_q=$(awk '/^## Open/ {on=1; next} /^## / {on=0} on' <(uncomment docs/QUESTIONS.md) | grep -c '^### Q-' || true)
 blk_q=$(awk '/^## Open/ {on=1; next} /^## / {on=0} on' <(uncomment docs/QUESTIONS.md) | grep -c '\*\*Blocking:\*\* yes' || true)
 prop_f=$(uncomment docs/FEATURES.md | grep -c '^\*\*Disposition:\*\* proposed' || true)
-echo "questions open: ${open_q:-0} (${blk_q:-0} blocking) · features awaiting a disposition: ${prop_f:-0}"
+meas=$(awk -F'|' '/^\| M-[0-9]+/ { s=$5; gsub(/^ +| +$/, "", s); if (s != "decided") n++ } END { print n+0 }' <(uncomment docs/MEASUREMENTS.md))
+echo "questions open: ${open_q:-0} (${blk_q:-0} blocking) · features awaiting a disposition: ${prop_f:-0} · measurements not decided: ${meas:-0}"
 if git rev-parse --verify --quiet "$REMOTE/$MAIN" >/dev/null; then
     echo "unpushed commits: $(git rev-list --count "$REMOTE/$MAIN".."$MAIN")"
 fi

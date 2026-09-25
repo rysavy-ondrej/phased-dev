@@ -4,7 +4,7 @@
 #   scaffold.sh <project-dir> [--force]
 #
 # Copies CLAUDE.md, docs/*, scripts/{method.conf,task-audit.sh,gate.sh,
-# progress.sh,data-inventory.sh,phase1-gate.sh} and
+# progress.sh,data-inventory.sh,measure.sh,phase1-gate.sh} and
 # .claude/workflows/run-phase.js. Never
 # overwrites an existing file unless --force -- in particular it leaves an
 # existing docs/CONCEPT.md (the owner's own notes) alone -- and prints what it
@@ -24,11 +24,11 @@ put() { # put <src> <dest-rel>
 
 put "$tpl/CLAUDE.md" CLAUDE.md
 for f in "$tpl"/docs/*.md; do put "$f" "docs/$(basename "$f")"; done
-for s in method.conf task-audit.sh gate.sh progress.sh data-inventory.sh; do put "$tpl/scripts/$s" "scripts/$s"; done
+for s in method.conf task-audit.sh gate.sh progress.sh data-inventory.sh measure.sh; do put "$tpl/scripts/$s" "scripts/$s"; done
 put "$tpl/scripts/phaseN-gate.sh" scripts/phase1-gate.sh
 put "$tpl/workflows/run-phase.js" .claude/workflows/run-phase.js
 chmod +x "$dest"/scripts/*.sh 2>/dev/null || true
-mkdir -p "$dest/docs/history"
+mkdir -p "$dest/docs/history" "$dest/docs/measurements"
 
 echo
 echo "Next: the owner writes docs/CONCEPT.md (if not already there), then run the"

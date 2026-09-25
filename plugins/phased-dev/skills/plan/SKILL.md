@@ -66,6 +66,16 @@ data flow end to end (a walking skeleton), and the contract tests. Every later
 task then fills one module behind a boundary that already exists. A plan whose
 first tasks build module internals before the interfaces exist is out of order.
 
+## 3a. Measurements before the choices they decide
+
+Every `M-n` the spec left pending becomes a **measurement task**
+(`- ☐ **T1.4 Measure M-1: flow-table structure.** Report per the measure skill;
+owner decides.`), placed **before the first task that depends on the choice** —
+usually right after the boundaries exist, early in the prototype, since the
+candidates only need the contract and a workload. Tasks that depend on the
+choice say so (`Depends on: M-1`). A measurement is small by construction:
+minimal candidates, one harness, one report.
+
 ## 4. Tasks — small by rule
 
 

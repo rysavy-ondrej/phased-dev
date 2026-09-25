@@ -24,6 +24,8 @@ Also read:
 - `docs/QUESTIONS.md` → *Open*, for each open question's options and the
   assumption work is proceeding on;
 - `docs/FEATURES.md` → entries with `Disposition: proposed`;
+- `docs/MEASUREMENTS.md` → measurements planned, running, or reported and
+  waiting for the owner's decision;
 - the last phase's gate result in STATUS, if the current phase has not been gated.
 
 If the scripts are missing (a project that predates them), derive the same from
@@ -44,7 +46,9 @@ Keep it short and in this order:
    `Q-7 [BLOCKING] Which output encoding? — affects phase 2 — recommended: UTF-8`.
    For non-blocking ones, the assumption in force. Say which must be answered
    before the next phase can be prepared.
-4. **Awaiting the owner**: spec decision points and levels to confirm, features
+4. **Awaiting the owner**: measurement reports waiting for a decision
+   (`docs/MEASUREMENTS.md`, status *reported*), spec decision points and levels
+   to confirm, features
    with a `proposed` disposition, a push waiting for confirmation, a mode
    allocation not yet confirmed.
 5. **Next step**: from `scripts/progress.sh next`.

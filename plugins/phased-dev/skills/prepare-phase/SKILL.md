@@ -45,6 +45,12 @@ verification is per task.
 Write the *Preparation* table under the phase: order, task, depends on, group,
 why here. Reorder the task lines to match if needed.
 
+**Pending measurements.** A task that depends on an undecided `M-n` is ordered
+after its measurement task, and the owner's decision on the report is a
+**blocking question** for it (record it as a `Q-n` when the report lands). If the
+measurement is in an earlier phase and still undecided, the dependent task
+cannot be prepared.
+
 ## 3. Questions answered first
 
 - Every open `Q-n` that affects this phase must be answered before the phase

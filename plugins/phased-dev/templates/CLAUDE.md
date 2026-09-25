@@ -23,6 +23,11 @@ inputs and outputs, who consumes the output.}}
 3. **Functionality and simplicity.** Obviously correct beats clever.
 4. **Speed.**
 
+**Performance is measured, not asserted.** A choice that depends on speed or
+memory is decided by a measurement (`docs/MEASUREMENTS.md`, `measure` skill),
+and every performance claim — in the spec, a commit, a comment — cites its
+`M-n`.
+
 This is about **proportionate effort**, not about preferring slow code. When the
 efficient shape is the natural one to write, it is simply the right code. What is
 not warranted is *disproportionate* effort — elaborate machinery, new failure
@@ -274,6 +279,7 @@ or silently reduce scope.
 | `docs/DIVERGENCES.md` | we differ from the authority on purpose, and why |
 | `docs/UNVALIDATED.md` | we have not checked whether we match; leaves only |
 | `docs/DATA.md` | what the test data is and covers; how to synthesize more |
+| `docs/MEASUREMENTS.md` | choices decided by measurement; every performance claim's evidence |
 | `docs/PROVENANCE.md`, `docs/TEST_DATA.md` | test data origin; what is missing |
 
 Prose that describes behaviour is checked against the behaviour like code is.

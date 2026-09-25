@@ -27,7 +27,8 @@ By an agent (or yourself), high effort, "be hard to satisfy":
 1. **The phase exit criterion** on the real data, all of it. Prototype: the
    demonstration runs and shows what it claims. Harnessing: the conformance
    comparison with the authority, the way `CLAUDE.md` says it can be compared.
-   Production: plus the quality targets (measure performance claims).
+   Production: plus the quality targets, measured with the `measure` skill's
+   method (a report per target, cited in STATUS).
 2. **Every `docs/DIVERGENCES.md` claim** is still literally true — run each.
 3. **Unbuilt features** reached by input behave as their `FEATURES.md` entry says.
 4. **`docs/UNVALIDATED.md`**: no entry gained a consumer this phase.

@@ -10,6 +10,7 @@ informed. One decision point = one question with 2–4 viable options.
 | more than one design is viable **and** the choice changes cost, capability, risk, or what the owner must live with | only one option is viable given what is already confirmed → decide it, log it as `agent (obvious)`, list it for veto |
 | the concept is silent or ambiguous about something that matters | the owner would answer "whatever you think" → decide it, log it |
 | the concept names a choice (language, DB, platform) → a **pre-filled** decision: confirm it, and raise it as a real decision only if it conflicts with something confirmed | a detail the implementer can settle inside one component without affecting its contract → not a spec question at all |
+| options that differ mainly in speed or memory, with no clear winner on paper → propose **deciding by measurement**: candidates behind one contract, an `M-n` with a decision rule agreed now | a performance guess presented as a fact → never; cite an `M-n` or say it is unmeasured |
 
 ## The shape of each option
 

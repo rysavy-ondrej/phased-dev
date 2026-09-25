@@ -18,7 +18,8 @@ in a box whose edges are already fixed.
 | 4 | Cross-cutting rules | not started |
 
 Statuses: *not started* · *proposed* (waiting for the owner) · *confirmed
-<date>* · *reopened* (a later level found a problem — see the decision log).
+<date>* · *confirmed, pending M-n* (confirmed, with a choice left to a
+measurement) · *reopened* (a later level found a problem — see the decision log).
 
 ---
 
@@ -91,6 +92,10 @@ One subsection per component, in the order the plan will build them.
 
 - **Responsibility:** (from 2.2)
 - **Pattern:** {{e.g. Adapter}} — why this one, what it saves the implementer
+- **Method:** {{the algorithm / data structure / library}} — or, when the choice
+  depends on performance, **candidates pending measurement**: `M-n` in
+  `MEASUREMENTS.md` lists them (all implementing the contract below), the
+  workload and the decision rule. Tasks that depend on the choice wait for it.
 - **Contract** (as it will be written in code):
 
   ```
@@ -129,7 +134,7 @@ One policy each, applied everywhere.
 | | prototype | harnessing | production |
 | --- | --- | --- | --- |
 | Correctness evidence | demonstration on sample data | conformance on the full test data | + fuzzing |
-| Performance | not measured | measured, recorded | target: … |
+| Performance | only choices pending `M-n` | measured, recorded (`M-n`) | target: …, measured at the gate |
 | Robustness | refuses unsupported input visibly | edge and malformed input | hostile input, bounded resources |
 
 ---
@@ -143,3 +148,4 @@ lists those for the owner's veto when the level is confirmed.
 | # | Level | Question | Options considered | Chosen | Decided by | Date |
 | --- | --- | --- | --- | --- | --- | --- |
 | D-1 | 1 | {{architectural style}} | pipeline · layered · event-driven | pipeline | owner | {{date}} |
+| D-2 | 3 | {{flow table structure}} | hash map · sorted vec | pending M-1 | owner (deferred to measurement) | {{date}} |

@@ -67,6 +67,15 @@ harness, no polish. Record what you skip as hardening (`feature` skill).
 At the end of a **subphase**, run `scripts/gate.sh <N><sub>` as a checkpoint.
 At the end of the **phase**, go to `gate` — the push happens there.
 
+## Measurement tasks
+
+A task that measures (`Measure M-n …`) follows the `measure` skill instead of
+steps 1–2: minimal candidates behind the contract, correctness first, then the
+benchmark, then the report. Its commit is the report with its raw data. The
+verifier re-runs the correctness check and a subset of the measurements and
+checks the report is reproducible from its commands. After ☑, the owner's
+decision is a blocking question for every task that depends on the choice.
+
 ## Pausing at a usage or rate limit
 
 Work can stop at any moment; all state is in git, so stopping is safe if the

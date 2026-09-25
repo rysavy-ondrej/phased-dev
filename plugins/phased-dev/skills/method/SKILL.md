@@ -45,6 +45,7 @@ CONCEPT.md ─start─▶ specify ───────────────�
 | any | `feature` | a new requirement that came up → `F-n` with a disposition | owner rules at triage: later phase, future cycle, or rejected |
 | any | `resume` | after a pause (usage/rate limit, interruption) → continues from git state | |
 | any | `test-data` | owner's sample corpus → described in `docs/DATA.md`; gaps → seeded, independently validated synthetic data | the data a phase needs exists and is described |
+| any | `measure` | a choice pending measurement (M-n) → candidates behind one contract, correctness first, benchmark, reproducible report → owner decides | D-n recorded, dependent tasks unblocked |
 | any | `registers` | which document a gap belongs in | |
 
 Steps 4–6 repeat for each phase.

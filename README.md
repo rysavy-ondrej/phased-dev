@@ -64,6 +64,7 @@ relaxes honesty of the output, tests that can fail, commit per task, or
 | `/phased-dev:question` | record or answer a question |
 | `/phased-dev:feature` | record a new requirement → later phase, later mode, or future cycle |
 | `/phased-dev:test-data` | describe the owner's sample data; generate synthetic test data from it |
+| `/phased-dev:measure` | decide between candidate methods by measuring speed and memory; report for the owner |
 | `/phased-dev:resume` | continue after a usage/rate limit or an interruption |
 | `/phased-dev:registers` | which document a gap belongs in |
 
@@ -76,6 +77,15 @@ distributions, cases present, sensitivity, and which spec behaviour it covers.
 Gaps are filled with synthetic data from seeded generators, validated by an
 independent reader of the format; expected results come from the authority or
 the spec, never from the code under test.
+
+## Decisions by measurement
+
+When the choice of a method, algorithm, data structure or library depends on
+speed or memory, the spec keeps several candidates behind one contract and an
+`M-n` entry with a decision rule agreed in advance. The plan runs the
+measurement before anything depends on the choice. The `measure` skill checks
+the candidates give the same correct output, benchmarks them on representative
+data, writes a reproducible report, and the owner decides.
 
 ## Progress, pause and resume
 
@@ -97,12 +107,14 @@ docs/SPEC.md                     architecture, technology, allowed libraries, be
 docs/IMPLEMENTATION_PLAN.md      mode allocation, phases, subphases, tasks
 docs/QUESTIONS.md FEATURES.md    questions and answers; new features with dispositions
 docs/DATA.md                     data catalog: what the test data is, covers, how to make more
+docs/MEASUREMENTS.md             choices decided by measurement; reports in docs/measurements/
 docs/STATUS.md BACKLOG.md DIVERGENCES.md UNVALIDATED.md PROVENANCE.md TEST_DATA.md
 scripts/method.conf              the project's check commands
 scripts/task-audit.sh            per-task audit (commit form, markers, green)
 scripts/gate.sh                  per-phase mechanical gate
 scripts/progress.sh              progress, open questions, next step
 scripts/data-inventory.sh        first look at a data corpus (counts, formats, sizes)
+scripts/measure.sh               repeated runs: wall time, peak memory, output hash
 scripts/phase1-gate.sh           template for a phase's runnable exit criterion
 .claude/workflows/run-phase.js   unattended phase runner
 ```

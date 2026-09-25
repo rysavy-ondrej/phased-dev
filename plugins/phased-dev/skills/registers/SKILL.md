@@ -19,6 +19,7 @@ project's `docs/` (scaffolded) or `<skill-dir>/../../templates/docs/`.
 | We built it and it differs from the authority on purpose | `DIVERGENCES.md` | a decision, measured |
 | We built it and nobody has checked it against anything | `UNVALIDATED.md` | an open question; leaves only |
 | Test data: what it is, what it covers, which file for what | `DATA.md` | see the `test-data` skill |
+| A choice decided by measurement; evidence for a performance claim | `MEASUREMENTS.md` + `measurements/M-n.md` | see the `measure` skill |
 | Test data: where it came from, how to regenerate | `PROVENANCE.md` | |
 | Test data we need and do not have | `TEST_DATA.md` | |
 | Where the project is now; the current run; pauses | `STATUS.md` | present tense only |

@@ -45,6 +45,17 @@ think" is not a decision point — decide it, log it. A round of questions is at
 most four; if a level has more, the level is too big or the options are too
 fine-grained.
 
+**Some choices need numbers.** When options differ mainly in speed, memory or
+another measurable property and the difference is not obvious, propose to
+**decide by measurement** instead of by opinion. If the owner agrees: keep two
+or more candidates in the spec, all behind the **same contract** (if they cannot
+share one, the choice is architectural and is decided now); add an `M-n` row to
+`docs/MEASUREMENTS.md` with the question, the candidates, the workload and the
+**decision rule** (criteria and thresholds, agreed now, before any number
+exists); log the decision point as `pending M-n`. The level can still be
+confirmed — as *confirmed, pending M-n* — and the `plan` schedules the
+measurement before anything that depends on it (`measure` skill).
+
 **Going back is allowed, silently changing is not.** If a lower level shows a
 higher decision was wrong (a component cannot meet its contract in the chosen
 technology), mark the higher level *reopened*, explain why, and put it back to
