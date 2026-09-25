@@ -108,6 +108,14 @@ scripts/measure.sh                 wall time and peak memory over repeated runs
 The scripts are language-agnostic; `specify` fills `scripts/method.conf` with the
 project's real build, lint and test commands.
 
+## A machine to run it on
+
+Agents work best with room to act on their own: installing tools, running
+builds, long unattended phases. [deploy/](deploy/README.md) turns an Ubuntu
+24.x/26.x machine into a **devbox** with one command. The devbox hosts isolated
+LXD sandboxes, one per project, each with its own toolchain and Claude Code
+preinstalled.
+
 ## License
 
 [MIT](LICENSE) © 2026 Ondrej Rysavy.
