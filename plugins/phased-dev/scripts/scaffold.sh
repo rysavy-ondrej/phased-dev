@@ -24,11 +24,20 @@ put() { # put <src> <dest-rel>
 
 put "$tpl/CLAUDE.md" CLAUDE.md
 for f in "$tpl"/docs/*.md; do put "$f" "docs/$(basename "$f")"; done
-for s in method.conf task-audit.sh gate.sh progress.sh data-inventory.sh measure.sh check-env.sh; do put "$tpl/scripts/$s" "scripts/$s"; done
+for s in task-audit.sh gate.sh progress.sh data-inventory.sh measure.sh check-env.sh; do put "$tpl/scripts/$s" "scripts/$s"; done
+# method.conf gets the project's name (the directory name) for the phase reports.
+name=$(basename "$(cd "$dest" && pwd)" | tr -c 'A-Za-z0-9_.\n-' '-')
+if [ -e "$dest/scripts/method.conf" ] && [ "$force" != "--force" ]; then
+    echo "skip   scripts/method.conf (exists)"
+else
+    mkdir -p "$dest/scripts"
+    sed "s/^PROJECT=project /PROJECT=$name /" "$tpl/scripts/method.conf" >"$dest/scripts/method.conf"
+    echo "write  scripts/method.conf (PROJECT=$name)"
+fi
 put "$tpl/scripts/phaseN-gate.sh" scripts/phase1-gate.sh
 put "$tpl/workflows/run-phase.js" .claude/workflows/run-phase.js
 chmod +x "$dest"/scripts/*.sh 2>/dev/null || true
-mkdir -p "$dest/docs/history" "$dest/docs/measurements"
+mkdir -p "$dest/docs/history" "$dest/docs/measurements" "$dest/docs/reports"
 
 echo
 echo "Next: the owner writes docs/CONCEPT.md (if not already there), then run the"

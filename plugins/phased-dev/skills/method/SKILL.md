@@ -40,7 +40,7 @@ CONCEPT.md ─start─▶ specify ───────────────�
 | 3 | `plan` | spec → `docs/IMPLEMENTATION_PLAN.md`: **mode allocation**, phases 1..N, subphases, tasks | owner confirms which work goes in which mode |
 | 4 | `prepare-phase` | a phase → fixed task order, dependencies, groups, answered questions, gate script | `Prepared: <date>` in the plan |
 | 5 | `implement` | prepared phase → one commit per task, each verified (☐ → ◐ → ☑) | every task ☑ |
-| 6 | `gate` | finished phase → comprehensive tests, review, triage, STATUS, **push** | gate passes, push done |
+| 6 | `gate` | finished phase → comprehensive tests, review, triage, **phase report** (`docs/reports/<project>_phase_<N>.md`: what was done, how to try it), STATUS, **push** | gate passes, report written, push done |
 | any | `status` | → where the implementation is, open questions, what is next | |
 | any | `question` | a question that came up → `Q-n` | answered before the next phase is prepared |
 | any | `feature` | a new requirement that came up → `F-n` with a disposition | owner rules at triage: later phase, future cycle, or rejected |

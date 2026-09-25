@@ -35,8 +35,12 @@ rest may not.
 
 (`<skill-dir>` is this skill's base directory.) It installs `CLAUDE.md`, the
 `docs/` registers and templates, `scripts/` (`method.conf`, `task-audit.sh`,
-`gate.sh`, `progress.sh`, `phase1-gate.sh`) and `.claude/workflows/run-phase.js`.
-It never overwrites an existing file, so the owner's concept is safe. If the
+`gate.sh`, `progress.sh`, `check-env.sh`, `data-inventory.sh`, `measure.sh`,
+`phase1-gate.sh`) and `.claude/workflows/run-phase.js`. It sets `PROJECT` in
+`scripts/method.conf` from the directory name — phase reports are named after it
+(`docs/reports/<PROJECT>_phase_<N>.md`); change it if the project has a better
+short name. It never overwrites an existing file, so the owner's concept is
+safe. If the
 project already has a `CLAUDE.md`, merge the template's sections into it. Ask
 before `git init` in a directory that is not a repository.
 

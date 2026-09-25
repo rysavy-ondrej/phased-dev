@@ -12,6 +12,7 @@ export const meta = {
     { title: 'Phase test' },
     { title: 'Review' },
     { title: 'Triage' },
+    { title: 'Report' },
   ],
 }
 
@@ -416,18 +417,32 @@ Commit once: "P${PHASE}: triage the phase review" with the trailer. Fix nothing 
   if (!triage) return paused('triage', 'the triage agent returned nothing — re-run it on resume')
 }
 
+phase('Report')
+const gateOk = !!phaseTest.pass && blockers.length === 0
+const report = await agent(`Write the phase report for Phase ${PHASE} (mode: ${MODE}) of ${REPO}, following the gate skill's references/phase-report.md (the phased-dev plugin): docs/reports/<PROJECT>_phase_${PHASE}.md, with PROJECT from scripts/method.conf. Create docs/reports/ if needed.
+
+Gate result: ${gateOk ? 'passed' : 'FAILED — say so at the top: ' + JSON.stringify(phaseTest.problems.concat(blockers.map(b => b.summary)))}.
+Tasks done in this run: ${done.map(d => d.id).join(', ') || '(none new)'}. Questions raised: ${questions.join(', ') || 'none'}. Features recorded: ${features.join(', ') || 'none'}.
+
+- "Try it": the exact build/run commands from a clean build, and 2-5 examples. RUN every command now on this commit and paste the real output (trim long output with …). Never include an example you did not run.
+- Specified vs implemented: take the external interface from docs/SPEC.md (CLI synopsis and options, API, endpoints, screens) and give every item its status — works / works but unvalidated / planned (which phase or mode) / refused until then (which F-n) / not started.
+- Tests and evidence from the gate; known limitations; open items; what the next phase adds.
+Link the report from docs/STATUS.md. Commit both: "P${PHASE}: phase ${PHASE} report" with the Co-Authored-By trailer. Do not push. Return the report's path.`, { label: `report:P${PHASE}`, phase: 'Report', effort: 'medium' })
+if (!report) return paused('report', 'the report agent returned nothing — write the phase report on resume (gate skill, step 5)')
+
 return {
   phase: PHASE,
   mode: MODE,
   completed: done,
   questions,
   features,
+  report,
   phaseTest,
   findings,
   blockers,
   triage,
-  gatePassed: !!phaseTest.pass && blockers.length === 0,
-  next: phaseTest.pass && blockers.length === 0
-    ? 'Owner: answer open questions and dispose of proposed features (gate skill, step 4), then push.'
+  gatePassed: gateOk,
+  next: gateOk
+    ? 'Owner: read the phase report, answer open questions and dispose of proposed features (gate skill, step 4), then push.'
     : 'Blockers become remediation tasks in this phase; prepare and implement them, then re-run the gate.',
 }

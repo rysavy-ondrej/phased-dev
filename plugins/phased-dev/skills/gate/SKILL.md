@@ -1,6 +1,6 @@
 ---
 name: gate
-description: Step 6 of the phased-dev method — complete a phase: run the comprehensive tests (scripts/gate.sh and the phase exit criterion on real data), re-check every documented divergence, review the phase at the depth its mode sets, triage findings, have the owner dispose of new features and answer open questions, update STATUS, and push. Use when every task of a phase is verified (☑), or when asked whether a phase is done.
+description: Step 6 of the phased-dev method — complete a phase: run the comprehensive tests (scripts/gate.sh and the phase exit criterion on real data), re-check every documented divergence, review the phase at the depth its mode sets, triage findings, have the owner dispose of new features and answer open questions, write the phase report (docs/reports/<project>_phase_<N>.md: what was done and how to try it, specified vs implemented), update STATUS, and push. Use when every task of a phase is verified (☑), or when asked whether a phase is done.
 ---
 
 # Gate
@@ -75,7 +75,25 @@ Then with the owner, in one round:
 
 Commit as `P<N>: triage and dispositions`.
 
-## 5. Record, push
+## 5. Phase report
+
+Write `docs/reports/<PROJECT>_phase_<N>.md` (`PROJECT` from
+`scripts/method.conf`) following `references/phase-report.md`: what the phase
+delivered, **how to try it** — for a CLI tool the usage as specified beside what
+is actually implemented, for a library its API, for a service its endpoints —
+real examples, the test evidence, known limitations and what comes next.
+
+- **Run every command in it now**, on this commit, from a clean build, and paste
+  the real output. An example that was not run does not go in.
+- Every specified command, option, endpoint or feature appears with its status:
+  works · works but unvalidated · planned (which phase/mode) · refused until then
+  (which F-n) · not started.
+- If the gate failed, write the report anyway and say so at the top.
+
+Commit it with the STATUS update below, tell the owner where it is, and show the
+*In short* and *Try it* sections.
+
+## 6. Record, push
 
 - `docs/STATUS.md`: the phase row — what is established (with numbers), what the
   gate cannot see yet, what the next phase inherits; a short *what it cost and
@@ -84,12 +102,14 @@ Commit as `P<N>: triage and dispositions`.
   `docs/history/phase-<N>.md`.
 - Before the push, `scripts/check-env.sh git` shows no `FAIL` (signed in, a
   GitHub `origin` the account can reach); fix with `git-setup`.
+- The phase report exists (`docs/reports/<PROJECT>_phase_<N>.md`) and STATUS
+  links it.
 - **Push** (`git push`) once the gate passes, confirming with the owner the first
   time. A push without a passing gate is allowed only when someone needs the
   work, with STATUS saying plainly what failed.
 - Check CI after the push.
 
-## 6. Next
+## 7. Next
 
 - More phases in this mode → `prepare-phase` for phase N+1.
 - **Last phase of a mode** (the prototype exit, or conformance reached): update

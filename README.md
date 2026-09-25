@@ -53,7 +53,9 @@ put to the owner. See `plugins/phased-dev/skills/method/references/caveman.md`.
    phases 1..N with subphases A, B, C.
 4. **Implementation**, phase by phase: prepare (fix task order, answer questions)
    → implement (per task: small tests, **commit**, independent verifier with
-   suggested repairs, ☑) → comprehensive tests, review, triage → **push**.
+   suggested repairs, ☑) → comprehensive tests, review, triage → **phase
+   report** (`docs/reports/<project>_phase_<N>.md`: what was done and how to try
+   it — for a CLI, the usage as specified vs what is implemented) → **push**.
 
 ### Three modes, in order
 

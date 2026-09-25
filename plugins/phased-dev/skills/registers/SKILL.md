@@ -25,6 +25,7 @@ project's `docs/` (scaffolded) or `<skill-dir>/../../templates/docs/`.
 | Test data we need and do not have | `TEST_DATA.md` | |
 | Where the project is now; the current run; pauses | `STATUS.md` | present tense only |
 | How it got here | `docs/history/phase-N.md` | moved whole when a phase closes |
+| What a phase delivered and how to try it | `docs/reports/<PROJECT>_phase_<N>.md` | one per phase, written at the gate; every example actually run |
 | A choice someone may reopen | `SPEC.md` → *Decision log* | dated, with the measurement |
 
 Moves are one-directional: QUESTIONS open → answered; FEATURES proposed →

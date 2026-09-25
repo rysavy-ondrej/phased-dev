@@ -207,7 +207,10 @@ Only the task's own commits change its marker.
 ### The push is the phase
 
 Commits accumulate on local `main`. `git push` happens once per **phase**, after
-`scripts/gate.sh <n>` and the comprehensive tests pass. Subphases (2A, 2B …) get
+`scripts/gate.sh <n>` and the comprehensive tests pass, and after the **phase
+report** `docs/reports/<PROJECT>_phase_<n>.md` is written: what the phase
+delivered and how to try it, with every specified command, option or feature
+marked as working, planned or refused — every example in it actually run. Subphases (2A, 2B …) get
 their own checkpoint run of the gate but are not pushed alone. Pushing earlier is
 allowed only when someone needs the work, and then `docs/STATUS.md` says plainly
 that the gate has not passed.
@@ -311,6 +314,7 @@ Details and reasoning: the phased-dev `method` skill, `references/caveman.md`.
 | `docs/UNVALIDATED.md` | we have not checked whether we match; leaves only |
 | `docs/DATA.md` | what the test data is and covers; how to synthesize more |
 | `docs/MEASUREMENTS.md` | choices decided by measurement; every performance claim's evidence |
+| `docs/reports/<PROJECT>_phase_<n>.md` | per phase: what was done, how to try it, specified vs implemented |
 | `docs/ENVIRONMENT.md` | the machines, tools and versions the project is built with; how to set up another |
 | `docs/PROVENANCE.md`, `docs/TEST_DATA.md` | test data origin; what is missing |
 

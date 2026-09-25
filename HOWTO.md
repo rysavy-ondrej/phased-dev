@@ -462,8 +462,37 @@ When every task of the phase is ☑:
 3. **Triage**: defects go to `docs/BACKLOG.md`, unbuilt things to
    `docs/FEATURES.md`. **You** decide the dispositions of new features and answer
    any open questions.
-4. `docs/STATUS.md` is updated, and the phase is **pushed** — once per phase. The
-   agent confirms with you the first time.
+4. A **phase report** is written: `docs/reports/logsum_phase_1.md` (the name is
+   `PROJECT` from `scripts/method.conf` — the directory name by default — plus
+   `_phase_<N>`). It tells you:
+   - what the phase delivered, task by task;
+   - **how to try it**: the exact build and run commands, and real examples with
+     their real output — every command in the report was run at the gate;
+   - for a CLI tool like logsum, **the usage as specified next to what is
+     actually implemented**, option by option: ✅ works · ⚠️ works but not yet
+     validated · ⏳ planned (which phase or mode) · ⛔ refused until then (which
+     feature) · ❌ not started;
+   - the test evidence, known limitations, and what the next phase adds.
+
+   For a library it lists the API instead, for a service the endpoints, for an
+   app the screens. If the gate failed, the report is still written and says so
+   at the top.
+5. `docs/STATUS.md` is updated and links the report, and the phase is
+   **pushed** — once per phase. The agent confirms with you the first time.
+
+A slice of what the report's *Try it* section looks like after the logsum
+prototype:
+
+```
+logsum [OPTIONS] <LOGFILE>...
+```
+
+| Command / option | Specified behaviour | Status |
+| --- | --- | --- |
+| `<LOGFILE>` | nginx combined log, plain | ✅ works |
+| `--format json` | JSON report | ✅ works |
+| `<LOGFILE>.gz` | gzipped input | ⛔ refused: "gzip not supported yet (F-3)" — harnessing |
+| `--top N` | top N URLs | ❌ not started — phase 4 |
 
 ---
 
@@ -550,6 +579,7 @@ hand. Re-running the scaffold never overwrites existing files.
 | Plan | `/phased-dev:plan` |
 | Each phase | `/phased-dev:prepare-phase` → `/phased-dev:implement` → `/phased-dev:gate` |
 | Anytime: where are we? | `/phased-dev:status` (shell: `scripts/progress.sh`) |
+| Try what a phase delivered | `docs/reports/<project>_phase_<N>.md` |
 | A question or a new idea | `/phased-dev:question`, `/phased-dev:feature` |
 | A performance choice | `/phased-dev:measure` |
 | After a pause | `/phased-dev:resume` |

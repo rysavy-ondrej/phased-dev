@@ -17,6 +17,8 @@ git status --porcelain
 ```
 
 Also read:
+- the latest phase report in `docs/reports/` — link it; it is the quickest way
+  for the owner to try what exists;
 - `docs/STATUS.md` → mode, *Current run* (paused? why? reset time?), next action;
 - **before implementation starts** (mode: specification): `docs/SPEC.md` →
   *Progress* (which level is confirmed, which is proposed and waiting for the
