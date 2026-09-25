@@ -107,3 +107,7 @@ scripts/measure.sh                 wall time and peak memory over repeated runs
 
 The scripts are language-agnostic; `specify` fills `scripts/method.conf` with the
 project's real build, lint and test commands.
+
+## License
+
+[MIT](LICENSE) © 2026 Ondrej Rysavy.
