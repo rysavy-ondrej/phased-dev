@@ -8,7 +8,9 @@ Extracted from the maestro-enjoy project, where every rule was added after a
 measured failure (`plugins/phased-dev/skills/method/references/lessons.md`).
 
 **New here?** [HOWTO.md](HOWTO.md) walks through a project from the first concept
-note to a pushed phase, step by step.
+note to a pushed phase, step by step. [CHEATSHEET.md](CHEATSHEET.md) is the
+one-page quick reference — it fits one A4 page at about 10 pt; from a browser,
+print at 80–85 % scale.
 
 ## Install
 

@@ -568,6 +568,8 @@ hand. Re-running the scaffold never overwrites existing files.
 
 ## 17. Cheat sheet
 
+A printable one-page version is in [CHEATSHEET.md](CHEATSHEET.md).
+
 | When | Command |
 | --- | --- |
 | Once, to install | the three commands in [section 1](#1-install) |
