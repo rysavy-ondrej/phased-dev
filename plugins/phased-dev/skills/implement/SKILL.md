@@ -23,6 +23,34 @@ when the user asks to run a whole phase unattended. Args:
 without the gate. It stops on the first blocked unit and returns why. It spawns
 many agents; say so and confirm before a production run.
 
+**Skip the Scope agent for small re-runs.** Scope reads the whole plan and the
+relevant source to write each task's brief — a fixed cost of the same order as
+implementing one task, which a run of one or two tasks cannot amortise. When you
+already know the tasks (a single remediation task, a re-run after a block),
+write the briefs yourself and pass them:
+
+```js
+{
+  phase: 3,
+  tasks: [{
+    id: "T3.17",
+    slug: "reused-5-tuple",
+    spec: "<the plan requirement, quoted verbatim, plus the context the implementer needs: file:line it starts from, the invariant or settled decision it touches>",
+    smallScale: "<the test that would fail if the behaviour broke, naming its target>",
+  }],
+  phaseExit: "<quoted from the plan, if the gate will run>",
+  notes: "<readiness items and traps that apply>",
+  skipReview: true,   // unless this run should also close the phase
+}
+```
+
+The brief is only as good as what you put in it: quote the requirement
+verbatim and name the code it extends, or the implementer builds a parallel
+scheme. Passing `tasks` also bypasses the plan's Batches table, so for a
+prototype pass `groups` too when there is more than one task. For a single task
+with no need to run unattended, prefer mode B below, which skips both Scope and
+the implementer agent.
+
 **B. In session** — the default for a prototype and for single tasks. The main
 session is the implementer (no subagent: the context is already loaded), and one
 independent verifier agent checks each unit. Steps below.
