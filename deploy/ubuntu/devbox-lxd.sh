@@ -37,11 +37,14 @@ SSH_PORT_MAX=2299
 #                   IP, or user@host (default: <you>@<the address you connected to>)
 #   DEVBOX_SSH_KEY  private key path ON YOUR WORKSTATION for the ~/.ssh/config block
 #                   (default: guessed from the key you logged in here with)
+# The environment wins over the config file, so a one-off `DEVBOX_HOST=x cmd` works.
 DEVBOX_CONF=${DEVBOX_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/devbox-lxd.conf}
+env_host=${DEVBOX_HOST:-}; env_key=${DEVBOX_SSH_KEY:-}
 # shellcheck disable=SC1090
 [[ -r $DEVBOX_CONF ]] && . "$DEVBOX_CONF"
-DEVBOX_HOST=${DEVBOX_HOST:-}
-DEVBOX_SSH_KEY=${DEVBOX_SSH_KEY:-}
+DEVBOX_HOST=${env_host:-${DEVBOX_HOST:-}}
+DEVBOX_SSH_KEY=${env_key:-${DEVBOX_SSH_KEY:-}}
+unset env_host env_key
 
 # Set by --git-name / --git-email; see resolve_git_identity.
 OPT_GIT_NAME=""; OPT_GIT_EMAIL=""
@@ -83,9 +86,12 @@ host_ssh() {
     fi
 }
 
-# HostName for the generated ~/.ssh/config block: DEVBOX_HOST minus any user@.
+# HostName for the generated ~/.ssh/config block: DEVBOX_HOST minus any user@, but
+# only if it is a real name or address. An ssh alias from your workstation's
+# ~/.ssh/config does not resolve as a HostName, so fall back to the detected address.
 host_name() {
-    if [[ -n $DEVBOX_HOST ]]; then printf '%s\n' "${DEVBOX_HOST#*@}"
+    local h=${DEVBOX_HOST#*@}
+    if [[ -n $h ]] && getent hosts "$h" >/dev/null 2>&1; then printf '%s\n' "$h"
     else host_addr
     fi
 }
