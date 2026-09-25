@@ -39,9 +39,8 @@ proposes options, plans, implements, verifies, and reports.
 
 **You need:** Claude Code, `git`, and access to GitHub (don't worry if `gh` or
 other tools are missing — `/phased-dev:git-setup` and `/phased-dev:dev-env` check
-and offer to install them later). The phased-dev repository is private, so the
-machine needs git access to it — `gh auth login` is the easy way. The scripts use `bash`, `awk` and GNU `time`, which Linux has; `node` is
-needed by caveman's hooks.
+and offer to install them later). The scripts use `bash`, `awk` and GNU `time`,
+which Linux has; `node` is needed by caveman's hooks.
 
 Run these three commands in a shell, in this order:
 

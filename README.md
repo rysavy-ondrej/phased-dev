@@ -27,8 +27,7 @@ claude plugin install phased-dev@phased-dev
 
 The last command installs `caveman@caveman` too (`+ 1 dependency: caveman`).
 Without the first line it stops with *Dependency "caveman@caveman" … not found.
-Is the "caveman" marketplace added?*. While this repository is private, the
-machine needs git access to it (e.g. `gh auth login`).
+Is the "caveman" marketplace added?*.
 
 To work on the plugin itself, clone it and add the local checkout instead:
 `claude plugin marketplace add ./phased-dev`.
