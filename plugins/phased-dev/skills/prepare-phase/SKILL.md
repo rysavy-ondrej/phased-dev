@@ -72,6 +72,10 @@ larger generators become tasks of the phase; which dependencies it adds
 (they must be in the spec's allowed list), which existing interface it wires into.
 Write each finding once, under *Traps and findings*.
 
+**Environment.** `scripts/check-env.sh` shows no `FAIL` for the tools this
+phase uses — including any it adds (a new test tool, a measurement harness).
+Anything missing is fixed now with `dev-env`, not discovered by the first task.
+
 ## 5. The gate script
 
 Write `scripts/phase<N>-gate.sh` now, before the code it grades: the phase exit

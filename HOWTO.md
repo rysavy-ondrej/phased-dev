@@ -15,8 +15,10 @@ proposes options, plans, implements, verifies, and reports.
 
 1. [Install](#1-install)
 2. [Create the project and write the concept](#2-create-the-project-and-write-the-concept)
+   — [check git and GitHub](#check-git-and-github)
 3. [Start](#3-start)
 4. [Design the specification together](#4-design-the-specification-together)
+   — [set up the development tools](#set-up-the-development-tools)
 5. [Describe your sample data (optional)](#5-describe-your-sample-data-optional)
 6. [Plan: decide what goes in which mode](#6-plan-decide-what-goes-in-which-mode)
 7. [Prepare a phase](#7-prepare-a-phase)
@@ -35,9 +37,10 @@ proposes options, plans, implements, verifies, and reports.
 
 ## 1. Install
 
-**You need:** Claude Code, `git`, and access to GitHub (the phased-dev repository
-is private, so the machine needs git access to it — `gh auth login` is the easy
-way). The scripts use `bash`, `awk` and GNU `time`, which Linux has; `node` is
+**You need:** Claude Code, `git`, and access to GitHub (don't worry if `gh` or
+other tools are missing — `/phased-dev:git-setup` and `/phased-dev:dev-env` check
+and offer to install them later). The phased-dev repository is private, so the
+machine needs git access to it — `gh auth login` is the easy way. The scripts use `bash`, `awk` and GNU `time`, which Linux has; `node` is
 needed by caveman's hooks.
 
 Run these three commands in a shell, in this order:
@@ -78,7 +81,7 @@ Start a new Claude Code session so the skills load.
 Create an empty directory, make it a git repository, and open Claude Code in it:
 
 ```bash
-mkdir logsum && cd logsum && git init
+mkdir logsum && cd logsum && git init -b main
 ```
 
 Now write **`docs/CONCEPT.md`** — in your own words. It is the only document you
@@ -116,6 +119,27 @@ Two anonymised days of logs in ~/samples/nginx/ (contain client IPs — sensitiv
 You don't need to follow the headings — if you skip `docs/CONCEPT.md`
 altogether, the next step creates a template for you to fill in.
 
+### Check git and GitHub
+
+The method commits after every task and pushes to GitHub after every phase, so
+it needs `git` and the GitHub CLI `gh`. `start` checks them first; you can also
+run the check on its own at any time:
+
+```
+/phased-dev:git-setup
+```
+
+It checks that `git` and `gh` are installed, your name and email are set, `gh`
+is signed in, and the repository is on `main` with a GitHub remote your account
+can reach. If something is missing it shows you the exact commands and **asks
+before installing or changing anything**. Two things you do yourself:
+
+- **Sign in to GitHub**: type `! gh auth login` at the Claude Code prompt (the
+  `!` runs it in your shell) and follow the prompts.
+- **Choose the repository** name and visibility when it offers to create one
+  (`gh repo create …`, private by default). Nothing is pushed until the first
+  phase is complete.
+
 ---
 
 ## 3. Start
@@ -146,8 +170,9 @@ docs/SPEC.md                     the specification (filled in step 4)
 docs/IMPLEMENTATION_PLAN.md      the plan (step 6)
 docs/QUESTIONS.md FEATURES.md    open questions; new feature ideas
 docs/DATA.md MEASUREMENTS.md     test data catalog; performance decisions
+docs/ENVIRONMENT.md              machines, tools and versions
 docs/STATUS.md BACKLOG.md …      status and other registers
-scripts/                         progress, audit, gate, data and measurement tools
+scripts/                         progress, audit, gate, environment, data and measurement tools
 .claude/workflows/run-phase.js   for unattended runs (step 8)
 ```
 
@@ -189,6 +214,32 @@ Things you should know:
 
 The result is a confirmed `docs/SPEC.md` and a filled-in `CLAUDE.md`, including
 the real build, lint and test commands in `scripts/method.conf`.
+
+### Set up the development tools
+
+Once the technology (level 2) is confirmed, the agent lists the tools it needs
+in `scripts/method.conf` (for logsum: Python ≥ 3.12, ruff, pytest) and runs:
+
+```
+/phased-dev:dev-env
+```
+
+- It detects your **OS, architecture and package manager**, and checks three
+  things: git and GitHub, the tools phased-dev's own scripts need, and the
+  project's toolchain with minimum versions.
+- For each missing tool it shows the install command and **asks you first**. It
+  prefers per-user installs (rustup, uv, nvm) over system-wide ones, and you run
+  anything that needs a password yourself (`! sudo …`).
+- A tool that **does not exist for your OS** at all is not worked around. It
+  becomes a question for you: build in CI or on another machine, use a container,
+  or choose different technology.
+- On **macOS**, the method's scripts need the GNU versions of a few tools
+  (`brew install bash coreutils findutils gnu-time`). On **Windows**, work inside
+  WSL2.
+
+The result is recorded in `docs/ENVIRONMENT.md`, including how to set up another
+machine the same way. The same check runs again before each phase, and before
+each push. In a shell, `scripts/check-env.sh` shows it.
 
 ---
 
@@ -474,6 +525,8 @@ hand. Re-running the scaffold never overwrites existing files.
 
 | Symptom | Cause and fix |
 | --- | --- |
+| `gh` not signed in, or push refused | `/phased-dev:git-setup`, then `! gh auth login` |
+| A build tool is missing or too old | `/phased-dev:dev-env` (or `scripts/check-env.sh` in a shell) |
 | Install says the caveman marketplace is missing | Run `claude plugin marketplace add JuliusBrussee/caveman`, then install again |
 | `/phased-dev:…` commands don't appear | Start a new session after installing; check `claude plugin list` |
 | Implement refuses to start | The phase isn't prepared (run `prepare-phase`), a blocking question is open (`status`), or the tree has uncommitted changes |
@@ -490,6 +543,8 @@ hand. Re-running the scaffold never overwrites existing files.
 | --- | --- |
 | Once, to install | the three commands in [section 1](#1-install) |
 | New project | write `docs/CONCEPT.md`, then `/phased-dev:start` |
+| Check git / GitHub | `/phased-dev:git-setup` |
+| Check or install dev tools | `/phased-dev:dev-env` (shell: `scripts/check-env.sh`) |
 | Design the spec | `/phased-dev:specify` (repeat until every level is confirmed) |
 | Sample data | `/phased-dev:test-data` |
 | Plan | `/phased-dev:plan` |

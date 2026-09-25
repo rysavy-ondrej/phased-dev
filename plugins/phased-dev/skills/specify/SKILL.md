@@ -87,7 +87,11 @@ build, test tooling and lint. Then the allowed libraries — few, maintained,
 each justified against writing it. Technology is chosen *for the confirmed
 architecture*: if the concept's technology cannot serve it, that is a decision
 point, not a quiet substitution. Typical decision points: each unset concern,
-each library with a credible alternative.
+each library with a credible alternative. Check each option against **this
+machine** (`scripts/check-env.sh`, `dev-env` skill): an option that cannot be
+built or tested here is marked so in the options, with what it would take (CI,
+another machine, a container). Once the level is confirmed, fill `TOOLS` in
+`scripts/method.conf` and run `dev-env` to install what is missing.
 
 **Level 3 — Components and contracts**, one component at a time (or a few small
 ones per round), in the order the plan will build them — boundaries used by many

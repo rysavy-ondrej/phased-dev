@@ -25,14 +25,19 @@ while [ $# -gt 0 ]; do
     esac
 done
 [ $# -gt 0 ] || { echo "measure: no command given (put it after --)" >&2; exit 2; }
-[ -x /usr/bin/time ] || { echo "measure: GNU time (/usr/bin/time) is required for peak memory" >&2; exit 2; }
+# GNU time: /usr/bin/time on Linux, gtime on macOS (brew install gnu-time).
+gtime=
+for c in /usr/bin/time gtime; do
+    command -v "$c" >/dev/null 2>&1 && "$c" --version 2>&1 | grep -qi GNU && { gtime=$c; break; }
+done
+[ -n "$gtime" ] || { echo "measure: GNU time is required for peak memory (scripts/check-env.sh method)" >&2; exit 2; }
 
 tmp=$(mktemp -d) || exit 2
 trap 'rm -rf "$tmp"' EXIT
 [ -n "$out" ] && [ ! -s "$out" ] && echo "label,run,wall_s,peak_rss_kib,exit,stdout_sha256" >"$out"
 
 one() { # one <run-number> -> prints "wall rss exit sha"
-    /usr/bin/time -f '%e %M' -o "$tmp/t" "$@" >"$tmp/o" 2>"$tmp/e"
+    "$gtime" -f '%e %M' -o "$tmp/t" "$@" >"$tmp/o" 2>"$tmp/e"
     local rc=$?
     read -r w m <"$tmp/t" 2>/dev/null || { w=NA; m=NA; }
     # GNU time prepends "Command exited with non-zero status" on failure

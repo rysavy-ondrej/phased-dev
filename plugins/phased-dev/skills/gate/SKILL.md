@@ -82,6 +82,8 @@ Commit as `P<N>: triage and dispositions`.
   what it taught* (repair rounds, the defect that recurred — if one did, name the
   rule in `CLAUDE.md`). Clear *Current run*. Move long narrative to
   `docs/history/phase-<N>.md`.
+- Before the push, `scripts/check-env.sh git` shows no `FAIL` (signed in, a
+  GitHub `origin` the account can reach); fix with `git-setup`.
 - **Push** (`git push`) once the gate passes, confirming with the owner the first
   time. A push without a passing gate is allowed only when someone needs the
   work, with STATUS saying plainly what failed.

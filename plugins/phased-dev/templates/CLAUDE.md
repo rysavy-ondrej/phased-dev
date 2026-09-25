@@ -58,6 +58,9 @@ in mind.
 Summarised from `docs/SPEC.md`, which is authoritative:
 
 - Languages: {{…}} · Frameworks: {{…}} · Target platforms: {{…}}
+- Tools on the development machine: the `TOOLS` list in `scripts/method.conf`,
+  checked by `scripts/check-env.sh`. Nothing is installed or configured without
+  the owner's consent (`dev-env`, `git-setup` skills).
 - **Libraries: only those listed in `docs/SPEC.md` → *Allowed libraries*.** Adding
   one is a question for the owner (`docs/QUESTIONS.md`), answered before the
   library is used — never a decision an implementer takes alone.
@@ -308,6 +311,7 @@ Details and reasoning: the phased-dev `method` skill, `references/caveman.md`.
 | `docs/UNVALIDATED.md` | we have not checked whether we match; leaves only |
 | `docs/DATA.md` | what the test data is and covers; how to synthesize more |
 | `docs/MEASUREMENTS.md` | choices decided by measurement; every performance claim's evidence |
+| `docs/ENVIRONMENT.md` | the machines, tools and versions the project is built with; how to set up another |
 | `docs/PROVENANCE.md`, `docs/TEST_DATA.md` | test data origin; what is missing |
 
 Prose that describes behaviour is checked against the behaviour like code is.

@@ -72,6 +72,8 @@ relaxes honesty of the output, tests that can fail, commit per task, or
 | Skill | When |
 | --- | --- |
 | `/phased-dev:method` | overview; what comes next |
+| `/phased-dev:git-setup` | check git and gh (installed, identity, signed in, GitHub remote); install or configure with consent |
+| `/phased-dev:dev-env` | check the OS and the project's toolchain; install what is missing, with consent; flag tools this OS cannot run |
 | `/phased-dev:start` | begin from concept notes: scaffold, note what the concept decides |
 | `/phased-dev:specify` | design the spec with the owner, level by level; resumes at the first unconfirmed level |
 | `/phased-dev:plan` | spec → mode allocation, phases, tasks |
@@ -126,6 +128,7 @@ docs/IMPLEMENTATION_PLAN.md      mode allocation, phases, subphases, tasks
 docs/QUESTIONS.md FEATURES.md    questions and answers; new features with dispositions
 docs/DATA.md                     data catalog: what the test data is, covers, how to make more
 docs/MEASUREMENTS.md             choices decided by measurement; reports in docs/measurements/
+docs/ENVIRONMENT.md              machines, tools and versions; how to set up another machine
 docs/STATUS.md BACKLOG.md DIVERGENCES.md UNVALIDATED.md PROVENANCE.md TEST_DATA.md
 scripts/method.conf              the project's check commands
 scripts/task-audit.sh            per-task audit (commit form, markers, green)
@@ -133,6 +136,7 @@ scripts/gate.sh                  per-phase mechanical gate
 scripts/progress.sh              progress, open questions, next step
 scripts/data-inventory.sh        first look at a data corpus (counts, formats, sizes)
 scripts/measure.sh               repeated runs: wall time, peak memory, output hash
+scripts/check-env.sh             platform, git/gh, method tools, project toolchain (TOOLS)
 scripts/phase1-gate.sh           template for a phase's runnable exit criterion
 .claude/workflows/run-phase.js   unattended phase runner
 ```

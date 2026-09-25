@@ -11,14 +11,23 @@ its substance, and turns what is missing into questions.
 ## 1. Find the concept notes
 
 Look for `docs/CONCEPT.md`, or notes the user points to (any file or pasted
-text). If there are none, do not write a concept for them: scaffold (step 2) and
+text). If there are none, do not write a concept for them: scaffold (step 3) and
 ask the owner to fill `docs/CONCEPT.md` — its template lists the headings this
 skill looks for — then stop.
 
 If the notes live elsewhere, copy them verbatim into `docs/CONCEPT.md` (keep the
 owner's wording; add only headings where the structure is obvious).
 
-## 2. Scaffold
+## 2. Git and GitHub first
+
+Run the `git-setup` skill's check before anything is written:
+`<skill-dir>/../../templates/scripts/check-env.sh git`. The project needs `git`
+and `gh`, an identity, a repository on `main` — ask before creating one — and,
+before the first push, a GitHub remote. Missing pieces are put to the owner as
+the `git-setup` skill describes; the remote may wait until the spec is done, the
+rest may not.
+
+## 3. Scaffold
 
 ```bash
 <skill-dir>/../../scripts/scaffold.sh <project-dir>
@@ -31,7 +40,7 @@ It never overwrites an existing file, so the owner's concept is safe. If the
 project already has a `CLAUDE.md`, merge the template's sections into it. Ask
 before `git init` in a directory that is not a repository.
 
-## 3. Read the concept — do not interrogate it
+## 4. Read the concept — do not interrogate it
 
 Concept notes are often abstract: a goal, the main functionality, a few
 preferences. **That is expected, not a defect.** Filling the gaps is the
@@ -52,7 +61,7 @@ Read the notes and extract, for the specification to start from:
 Ask the owner something now **only** if the goal itself cannot be stated — then
 one question, asking for it. Everything else waits for its level.
 
-## 4. Hand over
+## 5. Hand over
 
 Set `docs/STATUS.md` → "Mode: specification, level 0". Tell the owner in a few
 lines: what you understood the goal to be, what the concept already decides, and

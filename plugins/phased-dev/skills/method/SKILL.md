@@ -34,6 +34,7 @@ CONCEPT.md ─start─▶ specify ───────────────�
 
 | Step | Skill | Input → output | Done when |
 | --- | --- | --- | --- |
+| 0 | `git-setup`, `dev-env` | the machine → git and gh ready, signed in; the spec's toolchain installed (with consent) or its absence raised as a question | `scripts/check-env.sh` clean |
 | 1 | `start` | owner's `docs/CONCEPT.md` (may be abstract) → scaffolded repo, what the concept already decides | handed over to `specify` |
 | 2 | `specify` | concept → `docs/SPEC.md`, designed **top-down and interactively**: level 0 scope → 1 architecture and boundaries → 2 technology → 3 component contracts and patterns → 4 cross-cutting rules; agent proposes options, owner decides at each level | every level confirmed by the owner |
 | 3 | `plan` | spec → `docs/IMPLEMENTATION_PLAN.md`: **mode allocation**, phases 1..N, subphases, tasks | owner confirms which work goes in which mode |
