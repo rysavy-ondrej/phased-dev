@@ -70,6 +70,9 @@ regenerated with a different version is a new baseline, not a correction. Known
 defects in the data are recorded with evidence and with which set is the
 authority for which field instead.
 
+**Never compressed.** These files are parsed by the scripts and are the project's
+rules; `caveman-compress` and similar tools are not run on them.
+
 ## Prose is code
 
 Help text, doc comments and these files are checked against behaviour. A

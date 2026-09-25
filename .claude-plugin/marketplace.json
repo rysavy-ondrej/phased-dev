@@ -6,11 +6,20 @@
   "metadata": {
     "description": "The phased-dev development method: skills and templates for concept-to-release projects built with Claude Code."
   },
+  "allowCrossMarketplaceDependenciesOn": [
+    "caveman"
+  ],
   "plugins": [
     {
       "name": "phased-dev",
       "source": "./plugins/phased-dev",
-      "description": "A phased development method for agent-built software, from the owner's concept notes through spec and plan to implementation in three project modes (prototype, harnessing, production): one commit per task, independent verification, push per phase, question and feature registers, progress reporting, pause and resume."
+      "description": "A phased development method for agent-built software, from the owner's concept notes through spec and plan to implementation in three project modes (prototype, harnessing, production): one commit per task, independent verification, push per phase, question and feature registers, progress reporting, pause and resume.",
+      "dependencies": [
+        {
+          "name": "caveman",
+          "marketplace": "caveman"
+        }
+      ]
     }
   ]
 }

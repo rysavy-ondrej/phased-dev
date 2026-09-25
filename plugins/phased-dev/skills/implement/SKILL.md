@@ -45,11 +45,14 @@ harness, no polish. Record what you skip as hardening (`feature` skill).
    commit message).
 4. **New features** that come up → `feature` skill. Never built inside the task.
 5. **Commit**: mark the task ◐ in the plan (that line only — a sed on `T1.1` also
-   hits `T1.10`), commit `T2.3: <what>` with the trailer.
+   hits `T1.10`), commit `T2.3: <what>` with the trailer. This subject form
+   wins over any commit-message skill (e.g. `caveman-commit`).
 6. **Audit**: `scripts/task-audit.sh T2.3` must exit 0; fix with a further
    `T2.3:` commit.
 7. **Verify**: spawn one Agent (general-purpose, high effort) with the prompt in
-   `references/verifier-prompt.md` for this task's mode. In prototype mode, when a
+   `references/verifier-prompt.md` for this task's mode — not a caveman reviewer
+   (`cavecrew-reviewer`, `caveman-review`), whose one-line findings lack the
+   reproduction and the suggested repair. In prototype mode, when a
    whole implementation group is committed, one verifier takes the group. A
    verifier that returns nothing verified nothing — re-run it, never count it as
    a pass.
@@ -60,7 +63,8 @@ harness, no polish. Record what you skip as hardening (`feature` skill).
 9. **Mark verified**: flip ◐ → ☑, commit `T2.3: verified`. Keep the verifier's
    non-blocking observations for the phase triage (a running list, or straight
    into `docs/BACKLOG.md` under the phase).
-10. **Report progress** — one line to the user:
+10. **Report progress** — one line to the user (required output, also in caveman
+    mode):
     `T2.3 ☑ (a1b2c3d, 0 repairs) — 4/7 in phase 2 — next: T2.4`.
     Update `docs/STATUS.md` → *Current run* at the end of each group.
 

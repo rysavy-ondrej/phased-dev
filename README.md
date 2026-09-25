@@ -9,17 +9,32 @@ measured failure (`plugins/phased-dev/skills/method/references/lessons.md`).
 
 ## Install
 
+phased-dev depends on the [caveman](https://github.com/JuliusBrussee/caveman)
+plugin, which is installed with it. Add caveman's marketplace first — a
+dependency from another marketplace is only resolved when that marketplace is
+known:
+
 ```bash
+claude plugin marketplace add JuliusBrussee/caveman
 claude plugin marketplace add rysavy-ondrej/phased-dev
 claude plugin install phased-dev@phased-dev
 ```
 
-Or, inside Claude Code: `/plugin marketplace add rysavy-ondrej/phased-dev`, then
-`/plugin install phased-dev@phased-dev`. While the repository is private, the
+The last command installs `caveman@caveman` too (`+ 1 dependency: caveman`).
+Without the first line it stops with *Dependency "caveman@caveman" … not found.
+Is the "caveman" marketplace added?*. While this repository is private, the
 machine needs git access to it (e.g. `gh auth login`).
 
 To work on the plugin itself, clone it and add the local checkout instead:
 `claude plugin marketplace add ./phased-dev`.
+
+### Working with caveman
+
+Caveman compresses the agent's chat to save tokens; files, commits and docs stay
+in normal prose. phased-dev takes precedence where they meet: task-id commit
+subjects, never compressing `CLAUDE.md` or `docs/`, its own verifier and
+definition of done, the per-task progress line, and full sentences for decisions
+put to the owner. See `plugins/phased-dev/skills/method/references/caveman.md`.
 
 ## The flow
 

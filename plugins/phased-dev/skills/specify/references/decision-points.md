@@ -27,6 +27,10 @@ because of an earlier decision, name that decision (`D-4`).
 
 ## Asking
 
+Decision points are written in **full, unambiguous sentences** even when
+caveman mode is on — they fall under its Auto-Clarity rule. A compressed option
+the owner misreads becomes a wrong spec.
+
 - Use **AskUserQuestion**: up to four decision points per round, 2–4 options
   each; the owner can always choose "Other" and write their own.
 - Use the option **preview** for things best compared side by side: a component

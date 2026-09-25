@@ -77,6 +77,15 @@ fail, one commit per task, failure is a stop.
 - **Named design patterns** per module, chosen in the spec for a reason.
 - **A complexity budget** every part stays within, enforced by lint.
 
+## Installed with caveman
+
+phased-dev depends on the `caveman` plugin, installed with it: chat is
+compressed to save tokens, files stay in normal prose. `CLAUDE.md` →
+*Working with caveman* says where phased-dev's rules take precedence (commit
+subjects, never compressing the rule files, the definition of done, the
+verifier, progress lines, decisions put to the owner);
+`references/caveman.md` has the analysis.
+
 ## Rules that hold in every step
 
 - The owner writes the concept and makes the decisions; the agent designs,

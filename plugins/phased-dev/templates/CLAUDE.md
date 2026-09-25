@@ -251,6 +251,34 @@ or silently reduce scope.
 - After the reset, the `resume` skill reads `scripts/progress.sh`, verifies every
   ◐ task first, then continues with the next ☐ task.
 
+## Working with caveman
+
+The `caveman` plugin is installed with phased-dev. It compresses **chat** only;
+files, commits and docs stay in normal prose (its own *Boundaries* rule).
+Its skills are welcome for *how* a step is done; phased-dev defines *what* is
+required. Where they meet:
+
+1. **Commit subjects** follow this file (`T2.3: …` plus the trailer), whatever a
+   commit-message skill suggests — `task-audit.sh` rejects anything else.
+2. **Never compress** `CLAUDE.md`, `docs/**`, the plan, the spec or the registers
+   (`caveman-compress`, `caveman-learn`): the scripts parse them and rules lose
+   force when shortened.
+3. **Done means** the task's requirement and small test at the mode's depth,
+   proven by the verifier template (mutation included) — not a smaller proof set
+   chosen by `verify-and-stop` or `lean-build`.
+4. **Verification and gate reviews** use phased-dev's prompts in general-purpose
+   agents; `cavecrew-reviewer` / `caveman-review` never replace them.
+   `cavecrew-investigator` is fine for locating code; `cavecrew-builder` only
+   inside the current task, which the main session still tests, commits and
+   audits.
+5. **The one-line progress report** after each task is required output, not
+   narration.
+6. **Decisions put to the owner** (spec decision points, measurement choices,
+   dispositions, blocking questions) are written in full sentences — caveman's
+   Auto-Clarity applies.
+
+Details and reasoning: the phased-dev `method` skill, `references/caveman.md`.
+
 ## Token discipline
 
 - **Mechanical checks are scripts** (`task-audit.sh`, `gate.sh`, `progress.sh`);

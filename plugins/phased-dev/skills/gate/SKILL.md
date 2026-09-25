@@ -49,6 +49,9 @@ Actual commands and real output, not paraphrase. Fix nothing here.
   complexity; tests; robustness; conformance) in parallel,
   then a completeness critic given all findings: what did everyone miss?
 
+The lenses are general-purpose agents with phased-dev's prompts; a caveman
+reviewer may add an opinion but is not a lens.
+
 A lens that died has not reported "nothing"; the gate waits for it (see *Pausing*
 in the `implement` skill).
 
