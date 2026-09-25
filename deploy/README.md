@@ -139,9 +139,12 @@ To set them yourself, set these in the environment or in
 `~/.config/devbox-lxd.conf`:
 
 ```bash
-DEVBOX_HOST=devbox               # an ssh alias, host name or user@host
-DEVBOX_SSH_KEY=~/.ssh/work_key   # private key path on your workstation
+DEVBOX_HOST=devbox                   # an ssh alias, host name or user@host
+DEVBOX_SSH_KEY='~/.ssh/work_key'     # private key path on your workstation
 ```
+
+Keep the quotes around the key path. Without them, `~` expands to the host's
+home directory instead of staying `~` for your workstation.
 
 ## 3. Agent-assisted projects in a sandbox
 
