@@ -1,6 +1,6 @@
 ---
 name: specify
-description: Step 2 of the phased-dev method — derive docs/SPEC.md from the owner's concept and answered questions: architecture and components, languages, frameworks, allowed libraries, interfaces, precise behaviour, quality targets per mode, and decisions; fill CLAUDE.md's invariants, technology constraints and seams; locate test data. Every spec question must be answered and the owner must confirm the spec. Use after start, or when the spec needs writing or revising.
+description: Step 2 of the phased-dev method — derive docs/SPEC.md from the owner's concept and answered questions: modules with one responsibility each, the contracts between them written as interfaces, design patterns, a complexity budget, languages, frameworks, allowed libraries, interfaces, precise behaviour, quality targets per mode, and decisions; fill CLAUDE.md's invariants, technology constraints and design rules; locate test data. Every spec question must be answered and the owner must confirm the spec. Use after start, or when the spec needs writing or revising.
 ---
 
 # Specify
@@ -25,9 +25,24 @@ giving the reason:
 
 1. **Scope** — from the concept; later-cycle wishes become `F-n` entries
    (`feature` skill, disposition `future cycle`).
-2. **Architecture** — components, data flow, and the **seams** (one interface per
-   axis of change). Define the seams the product will need even if the prototype
-   has one implementation behind each: a seam is cheap now and a rewrite later.
+2. **Architecture** — the part that makes implementation smooth. The spec must
+   be detailed enough that implementing a task is filling in a box whose edges
+   are fixed. In this order:
+   - **Decompose** into modules with one responsibility each (a description that
+     needs "and" is two modules); no dependency cycles.
+   - **Define every boundary as a contract** in the project's language — the
+     actual interface/trait/signature code — plus inputs, outputs, errors, pre-
+     and postconditions, ownership, an example and a contract test. Include the
+     boundaries the product will need even if the prototype has one
+     implementation behind each: a boundary is cheap now and a rewrite later.
+   - **Name the design pattern** each module follows and why (Strategy, Adapter,
+     Pipeline, Factory, Observer, Repository …). Only patterns that remove a
+     decision from the implementer; no pattern for its own sake.
+   - **Set the complexity budget** — function length, nesting/complexity,
+     parameters, module size, dependencies per module — and the lint that
+     enforces it in `scripts/method.conf`'s `CHECKS`.
+   Review the architecture with the owner **before** writing the rest of the
+   spec: everything after it assumes it.
 3. **Technology** — language(s), frameworks, build, targets, test tooling.
 4. **Allowed libraries** — each with version, purpose, where it may be used,
    licence. This list is closed: nothing else gets used without an answered
@@ -54,7 +69,7 @@ answers go into the spec's text and *Decisions* table with the date.
   (an id that survives a reset, a quirky direction rule, a counter from an
   unexpected field, exact number formatting, preserved key order, data time vs
   wall time) — each with its citation and what breaks if "improved".
-- *Technology constraints*, *Architecture seams*, *The output contract*, the
+- *Technology constraints*, the *Design rules* module table, *The output contract*, the
   language-specific *Non-negotiables*, *Conventions*.
 - `scripts/method.conf`: the real `CHECKS` (format, lint, test), `GATE_CHECKS`,
   and the determinism command for the chosen toolchain.

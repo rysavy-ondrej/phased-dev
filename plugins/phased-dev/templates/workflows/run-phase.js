@@ -132,7 +132,8 @@ function verifyChecks(mode) {
   const common = `- Is the requirement met, or stubbed, partial, quietly narrowed? Quote it, then the code.
 - Run the real program on real (sample) data; look for a wrong result.
 - Unhandled input is refused or visibly skipped — never a plausible wrong result.
-- Prose the work added (help, doc comments, docs) matches the behaviour.`
+- Prose the work added (help, doc comments, docs) matches the behaviour.
+- Design (CLAUDE.md → Design rules): the change stays inside its module, uses the contracts exactly as docs/SPEC.md defines them (no interface changed without an answered question), follows the pattern the spec names, and stays within the complexity budget.`
   if (mode === 'prototype') return `${common}
 - The demonstration test really exercises the behaviour: break the behaviour, run that test, watch it fail, revert. One mutation per task.
 - Do NOT raise missing edge cases, harness or polish as problems — that is harnessing work; note them in observations.`
@@ -165,7 +166,7 @@ ${notes ? `## About this phase\n${notes}\n` : ''}
 ${prior.length ? prior.map(s => '- ' + s).join('\n') : '- nothing yet'}
 
 ## For EACH task, in order
-1. Implement it. Real code.
+1. Implement it inside its module, behind its contract, with the pattern docs/SPEC.md names and within its complexity budget (CLAUDE.md → Design rules). Changing a contract, adding a pattern or crossing a boundary is a blocking question. A task bigger than its plan line: stop and say how to split it.
 2. Its small tests in the same commit. Fixtures are literal data, never the constant under test; a new table of magic numbers gets a test pinning each value to a literal with its citation. You do not need to mutation-prove them — the verifier does.
 3. Mark it ◐ in docs/IMPLEMENTATION_PLAN.md (that line only — a sed on T1.1 also hits T1.10).
 4. Commit ONLY this task: subject "<id>: <what>", with the Co-Authored-By trailer. One task, one commit.
@@ -373,14 +374,14 @@ if (!phaseTest) return paused('phase test', 'the comprehensive test returned not
 
 const LENSES = {
   prototype: [
-    { key: 'combined', prompt: `Review Phase ${PHASE} (prototype) of ${REPO} briefly. Change no files. (1) Does it demonstrate what the phase set out to, end to end? (2) Can any output be a plausible wrong answer instead of a refusal or visible skip? (3) Was harness, edge-case or polish work done that belongs to harnessing (cost)? (4) Is a seam missing that harnessing will need (rewrite risk)? Severity blocker/major/minor.` },
+    { key: 'combined', prompt: `Review Phase ${PHASE} (prototype) of ${REPO} briefly. Change no files. (1) Does it demonstrate what the phase set out to, end to end? (2) Can any output be a plausible wrong answer instead of a refusal or visible skip? (3) Was harness, edge-case or polish work done that belongs to harnessing (cost)? (4) Is a boundary missing, or a contract bypassed, that harnessing will need (rewrite risk)? (5) Is any module or function over the spec's complexity budget? Severity blocker/major/minor.` },
   ],
   harnessing: [
     { key: 'tests', prompt: `Review the tests added in Phase ${PHASE} (harnessing) of ${REPO}. CLAUDE.md "Tests that cannot fail": assume one cannot fail and find it — break the behaviour each important test names and see whether it fails. Look for self-referential fixtures, tests of a neighbouring function, tables where one row is exercised. Is every behaviour rule the phase touches covered? ${TESTS} Severity blocker/major/minor. Change no files.` },
     { key: 'conformance', prompt: `Audit Phase ${PHASE} (harnessing) of ${REPO} against CLAUDE.md's prime directive and invariants and the plan. For EACH task: quote the requirement, say met / partly / unmet with evidence. Where code or prose disagrees with the authority, the authority wins. Severity blocker/major/minor. Change no files.` },
   ],
   production: [
-    { key: 'seams', prompt: `Review Phase ${PHASE} of ${REPO} against CLAUDE.md "Architecture seams": anything forcing a refactor later, types leaking across a seam, platform code outside its seam. Severity blocker/major/minor. Change no files.` },
+    { key: 'design', prompt: `Review Phase ${PHASE} of ${REPO} against CLAUDE.md "Design rules" and docs/SPEC.md "Modules and contracts": contracts bypassed or changed without an answered question, types leaking across a boundary, patterns not the ones the spec names, modules or functions over the complexity budget, anything forcing a refactor later. Severity blocker/major/minor. Change no files.` },
     { key: 'tests', prompt: `Review the tests added in Phase ${PHASE} of ${REPO}: assume one cannot fail and find it by mutation. ${TESTS} Severity blocker/major/minor. Change no files.` },
     { key: 'robustness', prompt: `Review Phase ${PHASE} of ${REPO} for crash paths, unchecked indexing and casts, unbounded growth, unactionable errors, diagnostics reaching the output channel, secrets in logs. file:line each. Severity blocker/major/minor. Change no files.` },
     { key: 'conformance', prompt: `Audit Phase ${PHASE} of ${REPO} against the prime directive, invariants and plan: each task met / partly / unmet with evidence. Severity blocker/major/minor. Change no files.` },

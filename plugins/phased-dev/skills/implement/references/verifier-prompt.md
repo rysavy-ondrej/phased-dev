@@ -31,6 +31,10 @@ Every FAIL line is a problem. Do not re-check by hand what it checks.
 - Run the real program on real (sample) data and look for a wrong result.
 - Unhandled input: refused or visibly skipped — never a plausible wrong result.
 - Prose the task added (help, doc comments, docs) matches the behaviour.
+- Design: the change stays inside its module; it uses contracts as the spec
+  defines them (no signature changed without an answered question); it follows
+  the pattern the spec names; every function and module is within the spec's
+  complexity budget.
 [prototype]
 - The demonstration test really exercises the behaviour: break the behaviour,
   run that test, watch it fail, revert. One mutation per task is enough.

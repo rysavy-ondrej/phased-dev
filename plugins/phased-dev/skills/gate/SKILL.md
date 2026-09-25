@@ -38,12 +38,14 @@ Actual commands and real output, not paraphrase. Fix nothing here.
 
 - **prototype** — one short combined review: does the phase demonstrate what it
   set out to, end to end? Is any output a plausible wrong answer? Was harness or
-  edge-case work done that belongs to harnessing (cost), or is a seam missing
-  that harnessing will need (rewrite risk)?
+  edge-case work done that belongs to harnessing (cost)? Is a boundary missing
+  or a contract bypassed that harnessing will need (rewrite risk)? Is anything
+  over the complexity budget?
 - **harnessing** — two lenses: *tests* (every new test can fail; fixtures not
   self-referential; coverage of every behaviour rule) and *conformance* (each
   task met / partly / unmet; every invariant it touches).
-- **production** — four lenses (seams, tests, robustness, conformance) in parallel,
+- **production** — four lenses (design — boundaries, contracts, patterns,
+  complexity; tests; robustness; conformance) in parallel,
   then a completeness critic given all findings: what did everyone miss?
 
 A lens that died has not reported "nothing"; the gate waits for it (see *Pausing*

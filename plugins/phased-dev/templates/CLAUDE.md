@@ -57,14 +57,41 @@ Summarised from `docs/SPEC.md`, which is authoritative:
   one is a question for the owner (`docs/QUESTIONS.md`), answered before the
   library is used — never a decision an implementer takes alone.
 
-## Architecture seams
+## Design rules
 
-| Seam | Location | Contains the change of... |
-| --- | --- | --- |
-| {{interface}} | {{path}} | {{what varies behind it}} |
+The spec (`docs/SPEC.md` → *Modules and contracts*) is detailed enough that
+implementing a task is filling in a well-defined box, not designing one.
 
-Adding behind one seam never requires touching another. If it does, the split is
-wrong — fix the seams rather than special-casing.
+1. **Boundaries first.** The modules and the boundaries between them are defined
+   before the code inside them, and built first: the earliest prototype tasks
+   create every interface and wire them end to end with the simplest possible
+   implementations (a walking skeleton). Later tasks fill one module at a time.
+2. **Every boundary has a contract**, written as code in the project's language
+   (trait, interface, abstract class, typed signature) *and* stated in the spec:
+   inputs, outputs, errors, pre- and postconditions, ownership/lifetime,
+   invariants, an example. A contract test checks each implementation against it.
+3. **A contract is changed deliberately, never in passing.** Changing an interface
+   another module depends on is a question for the owner (`docs/QUESTIONS.md`),
+   answered before the change, and the spec is updated in the same commit.
+4. **Named design patterns.** Each module states the pattern it follows and why
+   (the spec's *Patterns* table) — e.g. Strategy for interchangeable algorithms,
+   Adapter behind an external source, Pipeline for staged processing, Factory
+   where the concrete type is chosen by configuration. Use the pattern the spec
+   names; a pattern not in the table is a question, not an improvisation.
+5. **Keep every part simple.** One responsibility per module, class and function.
+   The limits in the spec's *Complexity budget* (function length, nesting,
+   parameters, dependencies per module) apply to all code; when a part grows past
+   them, split it along a responsibility — do not add a flag.
+6. **Small tasks.** A task touches one module or one contract and has one
+   observable outcome. A task that does not fit is split in the plan, not
+   implemented large.
+
+| Module | Location | Contract (interface) | Pattern | Contains the change of... |
+| --- | --- | --- | --- | --- |
+| {{module}} | {{path}} | {{Interface name}} | {{pattern}} | {{what varies behind it}} |
+
+Adding behind one boundary never requires touching another. If it does, the
+split is wrong — fix the boundaries (via a question) rather than special-casing.
 
 ## The output contract
 
@@ -80,7 +107,7 @@ are built in which mode; the current mode is in `docs/STATUS.md`.
 | | **1. prototype** | **2. harnessing** | **3. production** |
 | --- | --- | --- | --- |
 | Goal | **demonstrate the functionality end to end, quickly and cheaply** | make the prototype trustworthy | complete the product |
-| Builds | the main path from input to output through every seam, on the expected input | the test harness, conformance with the authority, edge cases, error handling, removal of prototype shortcuts | the remaining features, robustness, performance, packaging, CI, portability, user documentation |
+| Builds | the main path from input to output through every module boundary, on the expected input | the test harness, conformance with the authority, edge cases, error handling, removal of prototype shortcuts | the remaining features, robustness, performance, packaging, CI, portability, user documentation |
 | Does not build | edge cases, harnesses, error polish, secondary features | new features | — |
 | Small tests per task | one demonstration test: the task's behaviour on typical input | every behaviour the task names, including edge and malformed cases | as harnessing, plus fuzz targets for untrusted input |
 | Verifier | checks the task works and its demonstration test actually exercises it | proves every new test can fail (mutation) | proves every new test can fail (mutation) |
@@ -104,7 +131,8 @@ test that exists must be able to fail; one commit per task; failure is a stop.
 - **Never lie in the output.**
 - {{Language-specific: error types, no unwrap on input-derived data, unsafe
   policy, allocation policy on the hot path.}}
-- Every commit leaves the `CHECKS` in `scripts/method.conf` green.
+- Every commit leaves the `CHECKS` in `scripts/method.conf` green, including the
+  complexity lint where the language has one.
 
 ## Testing
 

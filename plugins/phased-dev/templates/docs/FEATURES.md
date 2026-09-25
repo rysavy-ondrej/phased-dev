@@ -28,6 +28,6 @@ Set by the owner at the phase's triage, never by the implementer:
 **What:** {{one or two sentences}}.
 **Why now / why not now:** {{…}}.
 **If reached before it exists:** {{the program refuses with … / skips and counts … / not reachable}}.
-**Size and seam:** {{S/M/L; the interface it plugs into}}.
+**Size and boundary:** {{S/M/L; the module and contract it plugs into}}.
 **Disposition:** proposed
 -->

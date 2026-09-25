@@ -6,7 +6,7 @@ allocation* table says which part of the spec is built in which.
 | Aspect | prototype | harnessing | production |
 | --- | --- | --- | --- |
 | Purpose | show it works end to end, fast and cheap | make it trustworthy | make it complete |
-| Scope | main path, expected input, every seam touched once | tests, conformance, edge cases, error handling, shortcut removal | remaining features, robustness, performance, packaging, CI, portability, docs |
+| Scope | main path, expected input, every module boundary built first (walking skeleton), then filled | tests, conformance, edge cases, error handling, shortcut removal | remaining features, robustness, performance, packaging, CI, portability, docs |
 | Explicitly not | edge cases, harness, polish, secondary features | new features | — |
 | Small test per task | one demonstration test on typical input | every named behaviour, incl. edge and malformed input | + fuzz targets for untrusted input |
 | Implementer proves tests can fail | no | no — the verifier does | no — the verifier does |
@@ -14,7 +14,7 @@ allocation* table says which part of the spec is built in which.
 | Verifier granularity | one per implementation group | one per task | one per task |
 | Repair rounds | 1 | 3 | 3 |
 | Comprehensive test | the phase's demonstration on sample data | exit criterion on the full data + conformance | + performance targets, fuzz runs |
-| Phase review | one short combined review | tests + conformance lenses | seams, tests, robustness, conformance + critic |
+| Phase review | one short combined review | tests + conformance lenses | design, tests, robustness, conformance + critic |
 | Commit / push | per task / per phase | per task / per phase | per task / per phase |
 
 ## Never relaxed

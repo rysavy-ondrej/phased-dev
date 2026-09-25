@@ -31,7 +31,7 @@ Recording one costs a few lines.
 **What:** <one or two sentences>.
 **Why now / why not now:** <…>.
 **If reached before it exists:** <the program refuses with "… (F-12)" | skips and counts it on stderr | not reachable>.
-**Size and seam:** <S/M/L; the interface it plugs into>.
+**Size and boundary:** <S/M/L; the module and contract it plugs into>.
 **Disposition:** proposed
 ```
 

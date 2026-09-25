@@ -22,6 +22,11 @@ list are proposed to the owner, not made silently.
 If the phase is an outline (a later mode), write its tasks now with the `plan`
 skill's rules.
 
+Re-check every task against the **size rule** (one module or contract, one
+outcome, one sitting) now that the real code is visible, and split any that
+grew. Check the contracts the phase relies on exist in code; a task that would
+have to invent or change one waits for an answered question.
+
 ## 2. Order and dependencies
 
 Read the code the phase builds on. Then fix the order:
@@ -32,7 +37,7 @@ Read the code the phase builds on. Then fix the order:
 
 Group tasks that **share context** (same module or files) into implementation
 groups `G1, G2 …`: one implementer session holds a group, but each task is still
-its own commit. A foundational or correctness-critical task (the seam
+its own commit. A foundational or correctness-critical task (a contract
 everything uses; a component with a memory or security bound) is a group of its
 own. In prototype mode, one verifier takes a whole group; in the other modes
 verification is per task.

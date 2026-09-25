@@ -14,7 +14,7 @@ For every spec item — each component, interface, behaviour rule, quality targe
 decide what each mode does with it, and fill the *Mode allocation* table:
 
 - **Prototype: the least that demonstrates the functionality end to end.** The
-  main path on expected input, through every seam once. Ask of each item: *is the
+  main path on expected input, through every module boundary once. Ask of each item: *is the
   demonstration impossible without it?* If not, it is not prototype work. No
   edge cases, no harness, no error polish, no secondary features, no
   performance work. The only robustness is honesty: unhandled input is refused
@@ -39,7 +39,7 @@ disagreements as answered questions.
   `# Prototype`, `# Harnessing`, `# Production` (the scripts read the mode from
   them).
 - Each phase ends with a **runnable program** and adds capability without
-  restructuring what came before; seams are fixed before anything hangs off them.
+  restructuring what came before; boundaries and contracts are built before anything hangs off them.
 - Split a phase into **subphases A, B, C** (`### Subphase 2A — …`) when it is wider
   than ~6–8 tasks or mixes a foundation with what is built on it. Subphases get a
   checkpoint gate run; the push waits for the whole phase.
@@ -56,7 +56,16 @@ when the previous one exits (see `method/references/modes.md`).
 A prototype is typically 1–3 phases. More suggests the allocation put
 harnessing work in the prototype — re-check it.
 
-## 3. Tasks
+## 3. Boundaries first
+
+The first prototype phase (or subphase 1A) **builds the boundaries**: every
+contract from the spec as code, each with the simplest implementation that lets
+data flow end to end (a walking skeleton), and the contract tests. Every later
+task then fills one module behind a boundary that already exists. A plan whose
+first tasks build module internals before the interfaces exist is out of order.
+
+## 4. Tasks — small by rule
+
 
 `- ☐ **T<phase>.<n> Title.** Requirement.` Ids are unique within a phase
 (subphases do not restart numbering). Each requirement is precise enough to quote
@@ -64,20 +73,28 @@ and judge met / partly / unmet, and names its **small test** at the depth of its
 mode: a demonstration test in prototype, every named behaviour in harnessing and
 production. Name the existing fixtures it must use.
 
-Give a task its own line rather than burying it in another when it touches
-everything (a refactor) or is the most consequential interface in the project.
+**Size rule.** A task:
+- touches **one module or one contract** (plus its tests);
+- has **one observable outcome** its small test demonstrates;
+- is small enough to implement, test and verify in one sitting — as a rough
+  guide, a few hundred changed lines at most.
+
+A task that breaks any of these is **split** — along the module boundary, or into
+"contract / first implementation / next behaviour" — before the plan is
+confirmed. A task that changes a contract says so in its title and needs an
+answered question.
 
 Do **not** fix task order or groups here — that is `prepare-phase`, done just
 before each phase, when the code it builds on exists.
 
-## 4. Deferred work
+## 5. Deferred work
 
 Everything the prototype deliberately skips that a later mode must do is a
 `kind: hardening` entry in `docs/FEATURES.md` with `Disposition: mode:
 harnessing` or `mode: production` — or is covered by the allocation table's later
 columns. Nothing skipped is left unrecorded.
 
-## 5. Gate scripts and status
+## 6. Gate scripts and status
 
 Create `scripts/phase<N>-gate.sh` for each detailed phase from
 `scripts/phase1-gate.sh`'s template (or leave it to that phase's preparation).

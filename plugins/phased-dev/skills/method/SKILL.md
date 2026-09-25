@@ -62,6 +62,16 @@ The mode sets test depth, verification strength and review size
 (`references/modes.md`). It never relaxes: honesty of the output, tests that can
 fail, one commit per task, failure is a stop.
 
+## Design rules that shape spec, plan and code
+
+- **Split the big into the small**: modules with one responsibility, tasks that
+  touch one module or contract with one observable outcome.
+- **Boundaries first**: modules and the contracts between them are specified in
+  the project's language and built first, as a walking skeleton; later tasks fill
+  one module at a time.
+- **Named design patterns** per module, chosen in the spec for a reason.
+- **A complexity budget** every part stays within, enforced by lint.
+
 ## Rules that hold in every step
 
 - The owner writes the concept and answers questions; agents derive, propose and

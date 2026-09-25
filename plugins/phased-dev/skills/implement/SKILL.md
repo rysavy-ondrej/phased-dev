@@ -30,8 +30,12 @@ harness, no polish. Record what you skip as hardening (`feature` skill).
 
 ## The loop, per task, in the prepared order
 
-1. **Implement** the task. Real code; the only placeholder allowed is an explicit
-   refusal ("not supported yet: F-n") where the plan says so.
+1. **Implement** the task inside its module, behind its contract, using the
+   pattern the spec names, within the complexity budget. Real code; the only
+   placeholder allowed is an explicit refusal ("not supported yet: F-n") where
+   the plan says so. Needing to change a contract, add a pattern or cross a
+   boundary is a question, not a decision. A task turning out bigger than its
+   plan line is split (record it, tell the owner) rather than implemented large.
 2. **Small tests** in the same commit, at the mode's depth. Fixtures are literal
    data, never the constant under test; a new table of magic numbers gets a test
    pinning each value to a literal with its citation. Run targeted tests while
