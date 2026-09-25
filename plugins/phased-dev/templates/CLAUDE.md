@@ -136,9 +136,12 @@ test that exists must be able to fail; one commit per task; failure is a stop.
 
 ## Testing
 
-**Test data provenance:** `docs/PROVENANCE.md` (where each set came from, which
-tool version made it, how to regenerate it) and `docs/TEST_DATA.md` (what is
-missing). Read both before assuming a fixture does or does not exist.
+**Test data:** `docs/DATA.md` (what each data set is, what it covers, which file
+to use for what), `docs/PROVENANCE.md` (where it came from, which tool version
+made it, how to regenerate it) and `docs/TEST_DATA.md` (what is missing). Read
+them before building a fixture. Synthetic data comes from seeded generators,
+validated by a reader that is not ours; an expected result is never produced by
+the code under test (`test-data` skill).
 
 | Tier | When | What |
 | --- | --- | --- |
@@ -270,6 +273,7 @@ or silently reduce scope.
 | `docs/BACKLOG.md` | defects and improvements in what was built, not blocking |
 | `docs/DIVERGENCES.md` | we differ from the authority on purpose, and why |
 | `docs/UNVALIDATED.md` | we have not checked whether we match; leaves only |
+| `docs/DATA.md` | what the test data is and covers; how to synthesize more |
 | `docs/PROVENANCE.md`, `docs/TEST_DATA.md` | test data origin; what is missing |
 
 Prose that describes behaviour is checked against the behaviour like code is.

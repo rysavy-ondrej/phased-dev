@@ -44,6 +44,7 @@ CONCEPT.md ─start─▶ specify ───────────────�
 | any | `question` | a question that came up → `Q-n` | answered before the next phase is prepared |
 | any | `feature` | a new requirement that came up → `F-n` with a disposition | owner rules at triage: later phase, future cycle, or rejected |
 | any | `resume` | after a pause (usage/rate limit, interruption) → continues from git state | |
+| any | `test-data` | owner's sample corpus → described in `docs/DATA.md`; gaps → seeded, independently validated synthetic data | the data a phase needs exists and is described |
 | any | `registers` | which document a gap belongs in | |
 
 Steps 4–6 repeat for each phase.

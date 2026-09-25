@@ -39,6 +39,13 @@ decide what "correct" means, name it and say where it is.
 
 What would a working end-to-end prototype demonstrate?
 
+## Sample data
+
+Optional. Demo data, samples, real captures, logs, a dataset — anything that
+shows what the input looks like. Say where it is and whether it is sensitive
+(personal data, real traffic, customer data). The `test-data` skill describes it
+for the agents and generates synthetic data from it.
+
 ## Constraints and preferences
 
 Platform, language, libraries, deployment, data that can or cannot be shared —

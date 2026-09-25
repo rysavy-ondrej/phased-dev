@@ -27,7 +27,9 @@ decide what each mode does with it, and fill the *Mode allocation* table:
   user documentation.
 
 State the **prototype exit**: one demonstration (a command on sample data and
-what it shows) that ends the prototype.
+what it shows) that ends the prototype. The sample data is named: a set from
+`docs/DATA.md`, or a small synthetic demo set the first phase generates
+(`test-data`, Part 2).
 
 **Show the allocation to the owner and get it confirmed** before writing
 phases — it is the decision that sets the cost of the whole project. Record

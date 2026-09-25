@@ -44,7 +44,10 @@ Read the notes and extract, for the specification to start from:
   an authority (reference implementation, standard, expected outputs), a
   constraint on data or deployment. These become *pre-filled* choices at the
   matching spec level, confirmed there;
-- **contradictions** between statements — note them for level 0.
+- **contradictions** between statements — note them for level 0;
+- **sample data** the owner mentions or supplies — note where it is and ask once
+  whether it is sensitive; its analysis (`test-data`, Part 1) runs alongside
+  level 0, so the spec can be checked against real examples.
 
 Ask the owner something now **only** if the goal itself cannot be stated — then
 one question, asking for it. Everything else waits for its level.

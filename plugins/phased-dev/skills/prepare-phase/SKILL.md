@@ -59,8 +59,10 @@ why here. Reorder the task lines to match if needed.
 
 ## 4. Fixtures, data, traps
 
-Which existing data covers this phase's tasks (so nobody hand-builds what real
-data already provides), which the phase must create, which dependencies it adds
+Which existing data covers this phase's tasks — from `docs/DATA.md`'s coverage
+table, so nobody hand-builds what real data already provides — and which the
+phase must create: small fixtures are generated now with `test-data` (Part 2),
+larger generators become tasks of the phase; which dependencies it adds
 (they must be in the spec's allowed list), which existing interface it wires into.
 Write each finding once, under *Traps and findings*.
 

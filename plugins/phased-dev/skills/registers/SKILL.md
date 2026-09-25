@@ -1,6 +1,6 @@
 ---
 name: registers
-description: Maintain the phased-dev documentation registers — STATUS, QUESTIONS, FEATURES, BACKLOG, DIVERGENCES, UNVALIDATED, PROVENANCE, TEST_DATA and phase history — deciding which register a gap belongs in and keeping every claim true. Use when recording a known difference, an unchecked feature, a deferred defect, project status, or test-data provenance, or when unsure which document something belongs in.
+description: Maintain the phased-dev documentation registers — STATUS, QUESTIONS, FEATURES, BACKLOG, DIVERGENCES, UNVALIDATED, DATA, PROVENANCE, TEST_DATA and phase history — deciding which register a gap belongs in and keeping every claim true. Use when recording a known difference, an unchecked feature, a deferred defect, project status, or test-data provenance, or when unsure which document something belongs in.
 ---
 
 # Registers
@@ -18,6 +18,7 @@ project's `docs/` (scaffolded) or `<skill-dir>/../../templates/docs/`.
 | We built it and it has a defect or could be better, not blocking | `BACKLOG.md` | deferred work |
 | We built it and it differs from the authority on purpose | `DIVERGENCES.md` | a decision, measured |
 | We built it and nobody has checked it against anything | `UNVALIDATED.md` | an open question; leaves only |
+| Test data: what it is, what it covers, which file for what | `DATA.md` | see the `test-data` skill |
 | Test data: where it came from, how to regenerate | `PROVENANCE.md` | |
 | Test data we need and do not have | `TEST_DATA.md` | |
 | Where the project is now; the current run; pauses | `STATUS.md` | present tense only |

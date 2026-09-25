@@ -58,7 +58,9 @@ scenario the prototype will demonstrate, the authority, priorities. For an
 abstract concept this is where most of the interpretation happens, so decision
 points here are *interpretations*: "by 'monitor the network' do you mean (a)
 live capture, (b) reading capture files, (c) both?" Wishes for later go into
-`FEATURES.md` as `future cycle`.
+`FEATURES.md` as `future cycle`. If the owner has sample data, run `test-data`
+(Part 1) now: a described corpus makes every later level more concrete, and
+real examples settle interpretation questions faster than options do.
 
 **Level 1 — Architecture.** The architectural style and why; the components,
 each with one responsibility (a description that needs "and" is two); the
@@ -82,7 +84,9 @@ first. For each: the pattern it follows and why; its contract written as code in
 the chosen language (interface, trait, typed signatures) with inputs, outputs,
 errors, pre/postconditions, ownership, an example and the contract test; its
 behaviour rules, precise enough to test, citing the authority; its external
-interface if it has one. Typical decision points: the shape of a contract (sync
+interface if it has one. Check each behaviour rule against the data described
+in `docs/DATA.md` where it covers the rule; a rule no data shows is marked
+*hypothesis* and its gap goes to `TEST_DATA.md`. Typical decision points: the shape of a contract (sync
 vs async, push vs pull, error model), the pattern, a behaviour the authority
 leaves ambiguous. If there is a reference implementation, read it here for each
 component's observable behaviour (copy it to `docs/reference/`, mark it
