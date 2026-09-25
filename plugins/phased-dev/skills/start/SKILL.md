@@ -1,12 +1,13 @@
 ---
 name: start
-description: Step 1 of the phased-dev method — take the owner's concept notes (docs/CONCEPT.md, written by a human, possibly abstract), scaffold the repository with the method's templates, note what the concept already decides, and hand over to the interactive specification. Use when beginning a project from concept notes, or when the user wants to set up a repository with this method.
+description: Step 1: begin a project from the owner's concept notes (docs/CONCEPT.md, may be abstract) — check git, scaffold the repo, note what the concept already decides, hand over to specify. Use when starting a new project with this method.
 ---
 
 # Start
 
-The concept is the **owner's** document. This skill reads it, never rewrites
-its substance, and turns what is missing into questions.
+The concept is the **owner's** document. This skill reads it and never rewrites
+its substance; what it leaves open is settled later, level by level, in
+`specify`.
 
 ## 1. Find the concept notes
 
@@ -20,8 +21,8 @@ owner's wording; add only headings where the structure is obvious).
 
 ## 2. Git and GitHub first
 
-Run the `git-setup` skill's check before anything is written:
-`<skill-dir>/../../templates/scripts/check-env.sh git`. The project needs `git`
+From the project directory, run the `git-setup` skill's check before anything
+is written: `<skill-dir>/../../templates/scripts/check-env.sh git`. The project needs `git`
 and `gh`, an identity, a repository on `main` — ask before creating one — and,
 before the first push, a GitHub remote. Missing pieces are put to the owner as
 the `git-setup` skill describes; the remote may wait until the spec is done, the
@@ -34,15 +35,12 @@ rest may not.
 ```
 
 (`<skill-dir>` is this skill's base directory.) It installs `CLAUDE.md`, the
-`docs/` registers and templates, `scripts/` (`method.conf`, `task-audit.sh`,
-`gate.sh`, `progress.sh`, `check-env.sh`, `data-inventory.sh`, `measure.sh`,
-`phase1-gate.sh`) and `.claude/workflows/run-phase.js`. It sets `PROJECT` in
-`scripts/method.conf` from the directory name — phase reports are named after it
-(`docs/reports/<PROJECT>_phase_<N>.md`); change it if the project has a better
-short name. It never overwrites an existing file, so the owner's concept is
-safe. If the
-project already has a `CLAUDE.md`, merge the template's sections into it. Ask
-before `git init` in a directory that is not a repository.
+`docs/` templates, the `scripts/` and `.claude/workflows/run-phase.js`, and never
+overwrites an existing file — the owner's concept is safe. It sets `PROJECT` in
+`scripts/method.conf` from the directory name (phase reports are
+`docs/reports/<PROJECT>_phase_<N>.md`); offer to change it if the project has a
+better short name. If the project already has a `CLAUDE.md`, merge the
+template's sections into it.
 
 ## 4. Read the concept — do not interrogate it
 

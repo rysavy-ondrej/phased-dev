@@ -1,6 +1,6 @@
 ---
 name: gate
-description: Step 6 of the phased-dev method — complete a phase: run the comprehensive tests (scripts/gate.sh and the phase exit criterion on real data), re-check every documented divergence, review the phase at the depth its mode sets, triage findings, have the owner dispose of new features and answer open questions, write the phase report (docs/reports/<project>_phase_<N>.md: what was done and how to try it, specified vs implemented), update STATUS, and push. Use when every task of a phase is verified (☑), or when asked whether a phase is done.
+description: Step 6: close a phase — comprehensive tests, review, triage, owner decisions on questions and features, the phase report (docs/reports/<project>_phase_<N>.md: what was done, how to try it), STATUS, push. Use when every task of a phase is ☑.
 ---
 
 # Gate
@@ -78,7 +78,8 @@ Commit as `P<N>: triage and dispositions`.
 ## 5. Phase report
 
 Write `docs/reports/<PROJECT>_phase_<N>.md` (`PROJECT` from
-`scripts/method.conf`) following `references/phase-report.md`: what the phase
+`scripts/method.conf`) following the template in `docs/reports/TEMPLATE.md`
+(the same as this skill's `references/phase-report.md`): what the phase
 delivered, **how to try it** — for a CLI tool the usage as specified beside what
 is actually implemented, for a library its API, for a service its endpoints —
 real examples, the test evidence, known limitations and what comes next.

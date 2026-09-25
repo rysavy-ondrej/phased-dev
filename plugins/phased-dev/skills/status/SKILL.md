@@ -1,6 +1,6 @@
 ---
 name: status
-description: Report the actual state of a phased-dev project's implementation — current mode, phase and subphase progress (tasks not started, committed-unverified, verified), unpushed work, pause state, the list of open questions (blocking first), features awaiting the owner's decision, and the next step. Use when the user asks for status, progress, where the project is, what is left, or what questions are open.
+description: Report where a phased-dev project is: spec level or phase progress, pause state, open questions (blocking first), decisions waiting for the owner, latest phase report, next step. Use when asked for status, progress, what is left, or open questions.
 ---
 
 # Status
@@ -17,7 +17,7 @@ git status --porcelain
 ```
 
 Also read:
-- the latest phase report in `docs/reports/` — link it; it is the quickest way
+- the latest phase report in `docs/reports/` (not `TEMPLATE.md`) — link it; it is the quickest way
   for the owner to try what exists;
 - `docs/STATUS.md` → mode, *Current run* (paused? why? reset time?), next action;
 - **before implementation starts** (mode: specification): `docs/SPEC.md` →

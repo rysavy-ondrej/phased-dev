@@ -1,6 +1,6 @@
 ---
 name: specify
-description: Step 2 of the phased-dev method — design docs/SPEC.md top-down and interactively from the owner's (possibly abstract) concept. The agent proposes, the owner decides, level by level — understanding and scope, architecture and component boundaries, technology (language, SDK, frameworks, database, UI, platform), each component's contract and pattern, cross-cutting rules — presenting viable options with trade-offs at each major decision and not starting a level until the one above is confirmed. Use after start, to continue an unfinished spec, or when a spec decision must be revisited.
+description: Step 2: design docs/SPEC.md with the owner, top-down — scope, architecture and boundaries, technology, component contracts and patterns, cross-cutting rules. Agent proposes options; owner decides each level before the next. Use after start or to continue or revise a spec.
 ---
 
 # Specify
@@ -41,9 +41,8 @@ log, and `docs/QUESTIONS.md`.
    (`P0: spec level <n> confirmed`). Then the next level.
 
 **Ask only major questions.** A question the owner would answer "whatever you
-think" is not a decision point — decide it, log it. A round of questions is at
-most four; if a level has more, the level is too big or the options are too
-fine-grained.
+think" is not a decision point — decide it, log it. A level that needs more than
+two rounds of four questions is too big, or its options are too fine-grained.
 
 **Some choices need numbers.** When options differ mainly in speed, memory or
 another measurable property and the difference is not obvious, propose to
@@ -115,10 +114,10 @@ few decision points — mostly the budget's numbers and the production targets.
 
 ## When the spec is confirmed
 
-- Fill `CLAUDE.md`: *What this project is*, *Invariants* (behaviour rules a
-  sensible design gets wrong by default, with citations), *Technology
-  constraints*, the *Design rules* component table, *The output contract*, the
-  language-specific *Non-negotiables*, *Conventions*.
+- Fill `CLAUDE.md`: *What this project is*, the *Invariants* (behaviour rules a
+  sensible design gets wrong by default, with citations), *Technology*, the
+  *Design rules* component table, *The output contract*, the language rules under
+  *Code*, *Conventions*, and `PROJECT` in the title.
 - Fill `scripts/method.conf`: the real `CHECKS` (format, lint incl. the
   complexity rules, test), `GATE_CHECKS`, the determinism command.
 - Test data: `docs/PROVENANCE.md` (origin, producing tool **and version**,

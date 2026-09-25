@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Step 5 of the phased-dev method — implement a prepared phase of docs/IMPLEMENTATION_PLAN.md task by task in the prepared order; each task gets its small tests, one commit (marked ◐), the audit script, an independent verifier that checks it and suggests repairs, bounded repair rounds, and a ☑ commit when verified. Reports progress after every task, records questions and new features as they arise, and pauses cleanly at a usage or rate limit. Use when asked to implement a task, a subphase or a phase.
+description: Step 5: implement a prepared phase task by task — tests, one commit per task (◐), audit, independent verifier with suggested repairs, ☑ — with a progress line per task and a clean pause at usage limits. Use to implement a task, subphase or phase.
 ---
 
 # Implement
@@ -14,10 +14,10 @@ phase in `docs/IMPLEMENTATION_PLAN.md` with its *Preparation*, and
 (`scripts/progress.sh questions`); the tree is clean and the `CHECKS` are green;
 `scripts/phase<N>-gate.sh` exists.
 
-The **mode** of the phase (the `# Prototype / # Harnessing / # Production`
-heading above it) sets test depth, verifier strength and repair rounds —
-`CLAUDE.md` → *Modes*. In prototype mode, resist doing more: no edge cases, no
-harness, no polish. Record what you skip as hardening (`feature` skill).
+The phase's **mode** (the `# Prototype / # Harnessing / # Production` heading
+above it) sets test depth, verification and repair rounds (`CLAUDE.md` →
+*Modes*). In prototype mode, resist doing more; record what you skip as
+hardening (`feature`).
 
 ## Roles
 
@@ -28,7 +28,12 @@ harness, no polish. Record what you skip as hardening (`feature` skill).
   task and returns reproduced problems, **each with a suggested repair**. It
   never edits code.
 
-## The loop, per task, in the prepared order
+## The loop
+
+Work through the implementation groups in the prepared order. In each group,
+steps 1–6 run **per task**; steps 7–10 run per **verification unit** — the whole
+group in prototype mode, each task otherwise. The next group starts when the
+previous one is ☑.
 
 1. **Implement** the task inside its module, behind its contract, using the
    pattern the spec names, within the complexity budget. Real code; the only
@@ -50,19 +55,16 @@ harness, no polish. Record what you skip as hardening (`feature` skill).
 6. **Audit**: `scripts/task-audit.sh T2.3` must exit 0; fix with a further
    `T2.3:` commit.
 7. **Verify**: spawn one Agent (general-purpose, high effort) with the prompt in
-   `references/verifier-prompt.md` for this task's mode — not a caveman reviewer
-   (`cavecrew-reviewer`, `caveman-review`), whose one-line findings lack the
-   reproduction and the suggested repair. In prototype mode, when a
-   whole implementation group is committed, one verifier takes the group. A
-   verifier that returns nothing verified nothing — re-run it, never count it as
-   a pass.
+   `references/verifier-prompt.md` for the unit's mode — not a caveman reviewer,
+   whose one-line findings lack the reproduction and the repair. A verifier that
+   returns nothing verified nothing: re-run it.
 8. **Repair**: for each reproduced problem, apply (or improve on) the suggested
-   repair in a further `T2.3:` commit, add the test that would have caught it,
-   and have a **recheck** agent confirm against that problem list only. Rounds:
-   prototype 1, harnessing/production 3. Problems that survive are a stop.
-9. **Mark verified**: flip ◐ → ☑, commit `T2.3: verified`. Keep the verifier's
-   non-blocking observations for the phase triage (a running list, or straight
-   into `docs/BACKLOG.md` under the phase).
+   repair in a further commit under the task's id, add the test that would have
+   caught it, and have a **recheck** agent confirm against that problem list
+   only. Rounds: prototype 1, otherwise 3. Problems that survive are a stop.
+9. **Mark verified**: flip ◐ → ☑ for each task of the unit, one `T2.3: verified`
+   commit per task. Keep the verifier's non-blocking observations for the phase
+   triage (a running list, or straight into `docs/BACKLOG.md`).
 10. **Report progress** — one line to the user (required output, also in caveman
     mode):
     `T2.3 ☑ (a1b2c3d, 0 repairs) — 4/7 in phase 2 — next: T2.4`.
@@ -115,7 +117,5 @@ true}` — quote the requirement verbatim and name the code it extends.
 
 ## Failure is a stop
 
-When a task cannot be completed, stop and report what was attempted, the exact
-failure output, the likely cause, and the decision needed. Never commit red,
-weaken a test, record a real diff as a divergence to get past it, skip ahead, or
-silently narrow the task.
+As `CLAUDE.md` says: report what was attempted, the exact output, the likely
+cause and the decision needed — never work around it.

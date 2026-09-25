@@ -1,6 +1,6 @@
 ---
 name: git-setup
-description: Check that git and the GitHub CLI (gh) are installed and ready — versions, git identity, gh signed in, the repository on branch main with a GitHub origin the account can reach — and, for anything missing, ask the owner whether to install or configure it, then do it with their consent. Use before the first commit of a project, before the first push, when a push or gh command fails, or when the user asks to check or set up git/GitHub.
+description: Check git and the GitHub CLI (gh) — installed, identity set, signed in, repo on main with a reachable GitHub remote — and fix gaps with the owner's consent. Use before the first commit or push, when a push or gh fails, or when asked to set up git/GitHub.
 ---
 
 # Git and GitHub setup

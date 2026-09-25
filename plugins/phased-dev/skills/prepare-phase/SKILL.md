@@ -1,6 +1,6 @@
 ---
 name: prepare-phase
-description: Prepare one phase of the phased-dev plan immediately before implementing it — fix the task order and dependencies, group tasks that share context, make sure every question affecting the phase is answered, locate fixtures and data, write the phase's gate script, and mark the phase Prepared. Use before implementing any phase; an unprepared phase must not be started.
+description: Step 4: prepare one phase before implementing it — task order and groups, questions answered, fixtures, environment, gate script — and mark it Prepared. Use before any phase starts.
 ---
 
 # Prepare a phase
@@ -65,11 +65,12 @@ cannot be prepared.
 
 ## 4. Fixtures, data, traps
 
-Which existing data covers this phase's tasks — from `docs/DATA.md`'s coverage
-table, so nobody hand-builds what real data already provides — and which the
-phase must create: small fixtures are generated now with `test-data` (Part 2),
-larger generators become tasks of the phase; which dependencies it adds
-(they must be in the spec's allowed list), which existing interface it wires into.
+- **Data:** which existing data covers each task (`docs/DATA.md` → *Coverage*),
+  so nobody hand-builds what real data provides; what the phase must create —
+  small fixtures now with `test-data`, larger generators as tasks of the phase.
+- **Dependencies** the phase adds (they must be in *Allowed libraries*) and the
+  existing interfaces it wires into.
+
 Write each finding once, under *Traps and findings*.
 
 **Environment.** `scripts/check-env.sh` shows no `FAIL` for the tools this
@@ -78,7 +79,9 @@ Anything missing is fixed now with `dev-env`, not discovered by the first task.
 
 ## 5. The gate script
 
-Write `scripts/phase<N>-gate.sh` now, before the code it grades: the phase exit
+Write `scripts/phase<N>-gate.sh` now (phase 1's was scaffolded; for later phases
+copy `scripts/phase1-gate.sh`'s structure — `ok`/`bad` counters, a failure when
+nothing was checked), before the code it grades: the phase exit
 criterion as runnable checks on real data. It fails until the phase is done,
 which is correct. Every check must fail when its setup fails ("graded nothing"),
 never pass on empty output.

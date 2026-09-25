@@ -10,7 +10,8 @@ This file says where the project **is**. How it got here moves to
 Mode {{prototype | harnessing | production}}, phase {{n}}{{subphase}}. `scripts/progress.sh` is the authority for
 task state; this section records what it cannot:
 
-- Paused: {{no | yes — reason (e.g. usage limit), at <time>, resets at <time>}}
+<!-- Paused: yes — <reason, e.g. usage limit>, at <time>, resets at <time> -->
+- Paused: no
 - Next step on resume: {{verify T2.3 | implement T2.4}}
 - Blocked on: {{Q-n | nothing}}
 

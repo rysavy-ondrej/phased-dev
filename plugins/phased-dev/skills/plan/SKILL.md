@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Step 3 of the phased-dev method — turn the confirmed spec into docs/IMPLEMENTATION_PLAN.md: propose which parts of the spec are built in which project mode (prototype, harnessing, production), then phases 1..N with subphases, tasks with small tests and runnable phase exit criteria. The prototype is planned in detail and kept minimal; later modes are outlined. Use after specify, when moving to the next mode, or when a plan needs re-cutting.
+description: Step 3: turn the confirmed spec into docs/IMPLEMENTATION_PLAN.md — propose what each mode (prototype, harnessing, production) builds, then phases 1..N, subphases and small tasks with exit criteria. Use after specify or when moving to the next mode.
 ---
 
 # Plan
@@ -14,8 +14,8 @@ For every spec item — each component, interface, behaviour rule, quality targe
 decide what each mode does with it, and fill the *Mode allocation* table:
 
 - **Prototype: the least that demonstrates the functionality end to end.** The
-  main path on expected input, through every module boundary once. Ask of each item: *is the
-  demonstration impossible without it?* If not, it is not prototype work. No
+  main path on expected input, through every boundary once. Ask of each item:
+  *is the demonstration impossible without it?* If not, it is not prototype work. No
   edge cases, no harness, no error polish, no secondary features, no
   performance work. The only robustness is honesty: unhandled input is refused
   or visibly skipped.
@@ -41,7 +41,8 @@ disagreements as answered questions.
   `# Prototype`, `# Harnessing`, `# Production` (the scripts read the mode from
   them).
 - Each phase ends with a **runnable program** and adds capability without
-  restructuring what came before; boundaries and contracts are built before anything hangs off them.
+  restructuring what came before; boundaries and contracts come before anything
+  hangs off them.
 - Split a phase into **subphases A, B, C** (`### Subphase 2A — …`) when it is wider
   than ~6–8 tasks or mixes a foundation with what is built on it. Subphases get a
   checkpoint gate run; the push waits for the whole phase.
@@ -53,7 +54,7 @@ disagreements as answered questions.
 **Detail only the prototype now.** Harnessing and production phases are an
 outline (title and a line or two of scope): what the prototype teaches changes
 them, and detail written now would be rewritten. Plan the next mode in detail
-when the previous one exits (see `method/references/modes.md`).
+when the previous one exits (the `method` skill's `references/modes.md`).
 
 A prototype is typically 1–3 phases. More suggests the allocation put
 harnessing work in the prototype — re-check it.
@@ -66,7 +67,7 @@ data flow end to end (a walking skeleton), and the contract tests. Every later
 task then fills one module behind a boundary that already exists. A plan whose
 first tasks build module internals before the interfaces exist is out of order.
 
-## 3a. Measurements before the choices they decide
+## 4. Measurements before the choices they decide
 
 Every `M-n` the spec left pending becomes a **measurement task**
 (`- ☐ **T1.4 Measure M-1: flow-table structure.** Report per the measure skill;
@@ -76,8 +77,7 @@ candidates only need the contract and a workload. Tasks that depend on the
 choice say so (`Depends on: M-1`). A measurement is small by construction:
 minimal candidates, one harness, one report.
 
-## 4. Tasks — small by rule
-
+## 5. Tasks — small by rule
 
 `- ☐ **T<phase>.<n> Title.** Requirement.` Ids are unique within a phase
 (subphases do not restart numbering). Each requirement is precise enough to quote
@@ -99,16 +99,14 @@ answered question.
 Do **not** fix task order or groups here — that is `prepare-phase`, done just
 before each phase, when the code it builds on exists.
 
-## 5. Deferred work
+## 6. Deferred work
 
 Everything the prototype deliberately skips that a later mode must do is a
 `kind: hardening` entry in `docs/FEATURES.md` with `Disposition: mode:
 harnessing` or `mode: production` — or is covered by the allocation table's later
 columns. Nothing skipped is left unrecorded.
 
-## 6. Gate scripts and status
+## 7. Status
 
-Create `scripts/phase<N>-gate.sh` for each detailed phase from
-`scripts/phase1-gate.sh`'s template (or leave it to that phase's preparation).
-Set `docs/STATUS.md` → mode `prototype`, and list the phases. Then
-`prepare-phase` for phase 1.
+Set `docs/STATUS.md` → mode `prototype` and list the phases. Each phase's gate
+script is written when it is prepared. Then `prepare-phase` for phase 1.

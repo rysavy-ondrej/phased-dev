@@ -1,6 +1,6 @@
 ---
 name: dev-env
-description: Check the development environment against what the project needs — operating system and architecture, the tools the phased-dev scripts require, and the project's toolchain from the spec (language, SDK, frameworks, database, build and test tools, versions) — detect tools that are missing, too old, or not available for this OS at all, and with the owner's consent install what can be installed; record the environment in docs/ENVIRONMENT.md. Use after the technology level of the spec is confirmed, before the first phase, when moving to a new machine, or when a build fails for environment reasons.
+description: Check this machine against the project: OS, the method's script tools, and the spec's toolchain (TOOLS); install what is missing with consent; raise tools unavailable on this OS as questions; record docs/ENVIRONMENT.md. Use after the spec's technology level, before phases, on a new machine.
 ---
 
 # Development environment

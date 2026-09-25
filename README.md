@@ -41,83 +41,44 @@ subjects, never compressing `CLAUDE.md` or `docs/`, its own verifier and
 definition of done, the per-task progress line, and full sentences for decisions
 put to the owner. See `plugins/phased-dev/skills/method/references/caveman.md`.
 
-## The flow
+## How it works
 
-1. **Concept** — the owner writes `docs/CONCEPT.md` in their own words; it can
-   be abstract.
-2. **Spec** — designed top-down and interactively: understanding and scope →
-   architecture and component boundaries → technology (language, SDK,
-   frameworks, database, UI, platform) → each component's contract and pattern →
-   cross-cutting rules. At each level the agent proposes viable options with
-   trade-offs; the owner chooses or suggests their own, and confirms the level
-   before the next begins.
-3. **Plan** — proposes which parts of the spec are built in which **mode**, then
-   phases 1..N with subphases A, B, C.
-4. **Implementation**, phase by phase: prepare (fix task order, answer questions)
-   → implement (per task: small tests, **commit**, independent verifier with
-   suggested repairs, ☑) → comprehensive tests, review, triage → **phase
-   report** (`docs/reports/<project>_phase_<N>.md`: what was done and how to try
-   it — for a CLI, the usage as specified vs what is implemented) → **push**.
-
-### Three modes, in order
+1. **Concept** — you write `docs/CONCEPT.md` in your own words; it can be abstract.
+2. **Spec** — designed top-down with you: scope → architecture and boundaries →
+   technology → component contracts and patterns → cross-cutting rules. The agent
+   proposes options with trade-offs; you decide each level.
+3. **Plan** — what each **mode** builds, then phases 1..N with subphases A, B, C.
+4. **Phases** — prepare (task order, questions answered) → implement (per task:
+   tests, **commit**, independent verifier with suggested repairs, ☑) → gate
+   (tests, review, **phase report** with how to try it) → **push**.
 
 | Mode | Purpose |
 | --- | --- |
-| **prototype** | demonstrate the functionality end to end, quickly and cheaply — no harness, no edge cases |
-| **harnessing** | make the prototype trustworthy: tests, conformance, edge cases, error handling |
-| **production** | complete the product: remaining features, robustness, performance, packaging, docs |
+| **prototype** | demonstrate the functionality end to end, quickly and cheaply |
+| **harnessing** | make it trustworthy: tests, conformance, edge cases, errors |
+| **production** | complete it: features, robustness, performance, packaging |
 
-The mode sets test depth, verification strength and review size. It never
-relaxes honesty of the output, tests that can fail, commit per task, or
-"failure is a stop".
+Also built in: sample-data analysis and synthetic test data (`test-data`),
+decisions by measurement (`measure`), environment and GitHub checks
+(`dev-env`, `git-setup`), progress and open questions (`status`), and clean
+pause/resume at usage limits — all state is in git.
 
 ## Skills
 
 | Skill | When |
 | --- | --- |
 | `/phased-dev:method` | overview; what comes next |
-| `/phased-dev:git-setup` | check git and gh (installed, identity, signed in, GitHub remote); install or configure with consent |
-| `/phased-dev:dev-env` | check the OS and the project's toolchain; install what is missing, with consent; flag tools this OS cannot run |
-| `/phased-dev:start` | begin from concept notes: scaffold, note what the concept decides |
-| `/phased-dev:specify` | design the spec with the owner, level by level; resumes at the first unconfirmed level |
-| `/phased-dev:plan` | spec → mode allocation, phases, tasks |
-| `/phased-dev:prepare-phase` | before each phase: order, groups, questions answered, gate script |
-| `/phased-dev:implement` | implement a phase: task → commit → verify → ☑, progress after each |
-| `/phased-dev:gate` | finish a phase: comprehensive tests, review, triage, push |
-| `/phased-dev:status` | where the implementation is, open questions, next step |
-| `/phased-dev:question` | record or answer a question |
-| `/phased-dev:feature` | record a new requirement → later phase, later mode, or future cycle |
-| `/phased-dev:test-data` | describe the owner's sample data; generate synthetic test data from it |
-| `/phased-dev:measure` | decide between candidate methods by measuring speed and memory; report for the owner |
-| `/phased-dev:resume` | continue after a usage/rate limit or an interruption |
-| `/phased-dev:registers` | which document a gap belongs in |
-
-## Test data
-
-The owner can supply a corpus of demo data or samples (optional). The
-`test-data` skill profiles it with scripts — not by reading it into the
-conversation — and writes a dataset card per set in `docs/DATA.md`: structure,
-distributions, cases present, sensitivity, and which spec behaviour it covers.
-Gaps are filled with synthetic data from seeded generators, validated by an
-independent reader of the format; expected results come from the authority or
-the spec, never from the code under test.
-
-## Decisions by measurement
-
-When the choice of a method, algorithm, data structure or library depends on
-speed or memory, the spec keeps several candidates behind one contract and an
-`M-n` entry with a decision rule agreed in advance. The plan runs the
-measurement before anything depends on the choice. The `measure` skill checks
-the candidates give the same correct output, benchmarks them on representative
-data, writes a reproducible report, and the owner decides.
-
-## Progress, pause and resume
-
-All state is in git. Each task in the plan is ☐ (not started), ◐ (committed, not
-yet verified) or ☑ (verified). `scripts/progress.sh` prints the picture and the
-next step; `scripts/progress.sh questions` lists the open questions. When a usage
-or rate limit is hit, the run pauses cleanly and records it in
-`docs/STATUS.md`; `resume` verifies any ◐ task first, then continues.
+| `/phased-dev:start` | begin from concept notes |
+| `/phased-dev:specify` | design the spec with you, level by level |
+| `/phased-dev:plan` | mode allocation, phases, tasks |
+| `/phased-dev:prepare-phase` | before each phase: order, questions, gate script |
+| `/phased-dev:implement` | task → commit → verify → ☑, progress after each |
+| `/phased-dev:gate` | tests, review, phase report, push |
+| `/phased-dev:status` | where things stand, open questions, next step |
+| `/phased-dev:question` · `feature` | record a question · a new idea |
+| `/phased-dev:test-data` · `measure` | describe/generate test data · measure candidates |
+| `/phased-dev:git-setup` · `dev-env` | check git/GitHub · the toolchain, install with consent |
+| `/phased-dev:resume` · `registers` | continue after a pause · which document a gap belongs in |
 
 ## What a project gets
 
@@ -125,25 +86,25 @@ or rate limit is hit, the run pauses cleanly and records it in
 overwriting an existing file:
 
 ```
-CLAUDE.md                        the rules every agent reads
-docs/CONCEPT.md                  template for the owner's concept notes
-docs/SPEC.md                     architecture, technology, allowed libraries, behaviour
-docs/IMPLEMENTATION_PLAN.md      mode allocation, phases, subphases, tasks
-docs/QUESTIONS.md FEATURES.md    questions and answers; new features with dispositions
-docs/DATA.md                     data catalog: what the test data is, covers, how to make more
-docs/MEASUREMENTS.md             choices decided by measurement; reports in docs/measurements/
-docs/ENVIRONMENT.md              machines, tools and versions; how to set up another machine
-docs/STATUS.md BACKLOG.md DIVERGENCES.md UNVALIDATED.md PROVENANCE.md TEST_DATA.md
-scripts/method.conf              the project's check commands
-scripts/task-audit.sh            per-task audit (commit form, markers, green)
-scripts/gate.sh                  per-phase mechanical gate
-scripts/progress.sh              progress, open questions, next step
-scripts/data-inventory.sh        first look at a data corpus (counts, formats, sizes)
-scripts/measure.sh               repeated runs: wall time, peak memory, output hash
-scripts/check-env.sh             platform, git/gh, method tools, project toolchain (TOOLS)
-scripts/phase1-gate.sh           template for a phase's runnable exit criterion
-.claude/workflows/run-phase.js   unattended phase runner
+CLAUDE.md                          the rules every agent reads
+docs/CONCEPT.md                    template for your concept notes
+docs/SPEC.md                       the design, level by level, with its decision log
+docs/IMPLEMENTATION_PLAN.md        mode allocation, phases, subphases, tasks
+docs/STATUS.md                     where the project is; pauses
+docs/QUESTIONS.md FEATURES.md      questions and answers; new ideas and their fate
+docs/DATA.md MEASUREMENTS.md       test data catalog; performance decisions
+docs/ENVIRONMENT.md                machines, tools, versions
+docs/BACKLOG.md DIVERGENCES.md UNVALIDATED.md PROVENANCE.md TEST_DATA.md
+docs/reports/TEMPLATE.md           the phase report template
+scripts/method.conf                project name, check commands, toolchain (TOOLS)
+scripts/progress.sh                progress, open questions, next step
+scripts/task-audit.sh gate.sh      per-task audit; per-phase gate
+scripts/phase1-gate.sh             phase 1's runnable exit criterion
+scripts/check-env.sh               platform, git/gh, tools
+scripts/data-inventory.sh          first look at a data corpus
+scripts/measure.sh                 wall time and peak memory over repeated runs
+.claude/workflows/run-phase.js     unattended phase runner
 ```
 
-The scripts are language-agnostic: set `CHECKS`, `GATE_CHECKS` and the
-determinism command in `scripts/method.conf` (defaults are for Rust/cargo).
+The scripts are language-agnostic; `specify` fills `scripts/method.conf` with the
+project's real build, lint and test commands.

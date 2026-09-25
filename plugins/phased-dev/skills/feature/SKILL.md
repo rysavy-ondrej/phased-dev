@@ -1,6 +1,6 @@
 ---
 name: feature
-description: Record a new feature requirement or a deferred hardening item discovered during specification, implementation or review in docs/FEATURES.md instead of building it on the side or forgetting it; make the code refuse it visibly if input can reach it; and let the owner dispose of it — a task in a later phase, a later mode, a future cycle, or rejected. Use when a new requirement or idea comes up mid-work, when prototype work deliberately skips something, or when the user says "park this", "later", "next cycle".
+description: Record a new requirement or deferred hardening in docs/FEATURES.md instead of building or forgetting it; keep the code refusing it visibly; the owner disposes of it (later phase, later mode, future cycle, rejected). Use when a new idea comes up mid-work or the user says park/later.
 ---
 
 # Feature

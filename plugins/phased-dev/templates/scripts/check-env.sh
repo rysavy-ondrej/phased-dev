@@ -15,8 +15,9 @@
 # Deliberately written for bash 3.2 and POSIX tools, so that it runs -- and can
 # say what is missing -- on a stock macOS before anything has been installed.
 set -u
-here=$(cd -- "$(dirname -- "$0")" && pwd)
-root=$(cd -- "$here/.." && pwd)
+# The project is the git repository (or directory) this is run from -- not the
+# script's own location, which may be the plugin before the project is scaffolded.
+root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 what=${1:-all}
 
 fail=0; warn=0

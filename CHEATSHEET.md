@@ -51,4 +51,4 @@ Unattended: *"Run the run-phase workflow for phase N."* (more agents, more token
 | Stopped, usage limit | `status`, then `resume` after the reset |
 | Chat too terse | `/caveman lite` or `/caveman off` |
 
-Step-by-step guide: **HOWTO.md**
+Step-by-step guide: **HOWTO.md** · how the method works: `method` · where a gap is recorded: `registers`

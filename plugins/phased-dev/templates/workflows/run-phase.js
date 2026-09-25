@@ -419,7 +419,7 @@ Commit once: "P${PHASE}: triage the phase review" with the trailer. Fix nothing 
 
 phase('Report')
 const gateOk = !!phaseTest.pass && blockers.length === 0
-const report = await agent(`Write the phase report for Phase ${PHASE} (mode: ${MODE}) of ${REPO}, following the gate skill's references/phase-report.md (the phased-dev plugin): docs/reports/<PROJECT>_phase_${PHASE}.md, with PROJECT from scripts/method.conf. Create docs/reports/ if needed.
+const report = await agent(`Write the phase report for Phase ${PHASE} (mode: ${MODE}) of ${REPO}, following the template in docs/reports/TEMPLATE.md: docs/reports/<PROJECT>_phase_${PHASE}.md, with PROJECT from scripts/method.conf. Create docs/reports/ if needed.
 
 Gate result: ${gateOk ? 'passed' : 'FAILED — say so at the top: ' + JSON.stringify(phaseTest.problems.concat(blockers.map(b => b.summary)))}.
 Tasks done in this run: ${done.map(d => d.id).join(', ') || '(none new)'}. Questions raised: ${questions.join(', ') || 'none'}. Features recorded: ${features.join(', ') || 'none'}.

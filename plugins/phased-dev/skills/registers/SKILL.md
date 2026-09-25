@@ -1,13 +1,13 @@
 ---
 name: registers
-description: Maintain the phased-dev documentation registers — STATUS, QUESTIONS, FEATURES, BACKLOG, DIVERGENCES, UNVALIDATED, DATA, PROVENANCE, TEST_DATA and phase history — deciding which register a gap belongs in and keeping every claim true. Use when recording a known difference, an unchecked feature, a deferred defect, project status, or test-data provenance, or when unsure which document something belongs in.
+description: Keep the phased-dev registers (STATUS, QUESTIONS, FEATURES, BACKLOG, DIVERGENCES, UNVALIDATED, DATA, MEASUREMENTS, ENVIRONMENT, reports) true, and decide which one a gap belongs in. Use when recording status, a difference, an unchecked feature or a deferred defect.
 ---
 
 # Registers
 
 Every known gap is written down in exactly one place, with a reason, and every
-claim in these files is as checkable as code. The templates are in the
-project's `docs/` (scaffolded) or `<skill-dir>/../../templates/docs/`.
+claim in these files is as checkable as code. All of them live in the project's
+`docs/` (templates: `<skill-dir>/../../templates/docs/`).
 
 ## Which register?
 
@@ -24,8 +24,8 @@ project's `docs/` (scaffolded) or `<skill-dir>/../../templates/docs/`.
 | Test data: where it came from, how to regenerate | `PROVENANCE.md` | |
 | Test data we need and do not have | `TEST_DATA.md` | |
 | Where the project is now; the current run; pauses | `STATUS.md` | present tense only |
-| How it got here | `docs/history/phase-N.md` | moved whole when a phase closes |
-| What a phase delivered and how to try it | `docs/reports/<PROJECT>_phase_<N>.md` | one per phase, written at the gate; every example actually run |
+| How it got here | `history/phase-N.md` | moved whole when a phase closes |
+| What a phase delivered and how to try it | `reports/<PROJECT>_phase_<N>.md` | one per phase, written at the gate; every example actually run |
 | A choice someone may reopen | `SPEC.md` → *Decision log* | dated, with the measurement |
 
 Moves are one-directional: QUESTIONS open → answered; FEATURES proposed →

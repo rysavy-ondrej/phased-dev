@@ -1,327 +1,207 @@
 # {{PROJECT}} — agent context
 
-Read this file before touching any code. It records the rules that are easy to
-get wrong and expensive to discover late. It is injected into every agent, so it
-is the one place a rule lives; prompts name a rule, they do not restate it.
-
-| Document | Role | Written by |
-| --- | --- | --- |
-| `docs/CONCEPT.md` | why the project exists, what it must do — the starting point | the owner (human) |
-| `docs/SPEC.md` | how: architecture, technology, allowed libraries, component contracts, patterns, decision log | designed by the agent level by level; every major decision the owner's |
-| `docs/IMPLEMENTATION_PLAN.md` | phases, subphases, ordered tasks, modes, exit criteria | derived from the spec |
-| this file | the rules every agent follows | derived from all three |
+Read this before touching code. It is injected into every agent, so it is the one
+place a rule lives; prompts and skills name a rule, they do not restate it.
 
 ## What this project is
 
-{{WHAT_IT_IS — two or three sentences from the concept: what it does, its
-inputs and outputs, who consumes the output.}}
+{{WHAT_IT_IS — two or three sentences from the concept: what it does, its inputs
+and outputs, who consumes the output.}}
 
-### What wins when they conflict
+**What wins when they conflict:** 1. **{{PRIME}}** (the prime directive below) ·
+2. never crash on input, never break the output contract, never lie in the
+output · 3. functionality and simplicity · 4. speed.
 
-1. **{{PRIME}}** — the prime directive below. Never traded for anything.
-2. **Never crash on input, never break the output contract, never lie in the output.**
-3. **Functionality and simplicity.** Obviously correct beats clever.
-4. **Speed.**
-
-**Performance is measured, not asserted.** A choice that depends on speed or
-memory is decided by a measurement (`docs/MEASUREMENTS.md`, `measure` skill),
-and every performance claim — in the spec, a commit, a comment — cites its
-`M-n`.
-
-This is about **proportionate effort**, not about preferring slow code. When the
-efficient shape is the natural one to write, it is simply the right code. What is
-not warranted is *disproportionate* effort — elaborate machinery, new failure
-modes, new invariants — for a gain nobody has measured a need for. Write the
-plain version, record the choice and its measured cost in the spec's
-*Decision log*, and leave optimisation to a production phase with a benchmark.
+That is **proportionate effort**, not a preference for slow code: when the
+efficient shape is the natural one, write it. Not warranted is elaborate
+machinery or a new failure mode for a gain nobody measured. **Performance is
+measured, not asserted:** a choice that depends on speed or memory is decided by
+a measurement (`docs/MEASUREMENTS.md`, `measure` skill), and every performance
+claim cites its `M-n`.
 
 ## The prime directive: {{PRIME}}
 
-{{AUTHORITY — what is normative when opinions differ: a reference
-implementation, a standard, golden outputs, or the concept itself. Where its copy
-lives (read-only).}}
+{{AUTHORITY — what decides correctness: a reference implementation, a standard,
+golden outputs, or the concept itself; where its read-only copy lives.}}
 
-When this document, the spec, or your own judgement disagrees with the
-authority, **the authority wins** — raise a question (`docs/QUESTIONS.md`), do not
-silently "improve" the behaviour.
+When this file, the spec or your judgement disagrees with the authority, **the
+authority wins** — raise a question (`docs/QUESTIONS.md`); never silently
+"improve" the behaviour.
 
-### Invariants
-
-The rules a sensible design gets **wrong by default**, each with its source. The
-full specification is `docs/SPEC.md`; this list is the part every agent must hold
-in mind.
+**Invariants** — the rules a sensible design gets wrong by default, each citing
+its source (the full behaviour is `docs/SPEC.md` §4):
 
 1. {{INVARIANT — precise enough to test; cite the source.}}
 
-## Technology constraints
+## Technology
 
-Summarised from `docs/SPEC.md`, which is authoritative:
+From `docs/SPEC.md` §3, which is authoritative: {{language · frameworks · target
+platforms}}.
 
-- Languages: {{…}} · Frameworks: {{…}} · Target platforms: {{…}}
-- Tools on the development machine: the `TOOLS` list in `scripts/method.conf`,
-  checked by `scripts/check-env.sh`. Nothing is installed or configured without
-  the owner's consent (`dev-env`, `git-setup` skills).
-- **Libraries: only those listed in `docs/SPEC.md` → *Allowed libraries*.** Adding
-  one is a question for the owner (`docs/QUESTIONS.md`), answered before the
-  library is used — never a decision an implementer takes alone.
+- **Libraries:** only those in `docs/SPEC.md` → *Allowed libraries*. Another one
+  is a question for the owner, answered before it is used.
+- **Tools** on the development machine: `TOOLS` in `scripts/method.conf`, checked
+  by `scripts/check-env.sh`. Nothing is installed or configured without the
+  owner's consent (`dev-env`, `git-setup`).
 
 ## Design rules
 
-The spec (`docs/SPEC.md` → *Components and contracts*) is detailed enough that
-implementing a task is filling in a well-defined box, not designing one.
+The spec is detailed enough that a task fills in a box whose edges are fixed.
 
-1. **Boundaries first.** The modules and the boundaries between them are defined
-   before the code inside them, and built first: the earliest prototype tasks
-   create every interface and wire them end to end with the simplest possible
-   implementations (a walking skeleton). Later tasks fill one module at a time.
-2. **Every boundary has a contract**, written as code in the project's language
-   (trait, interface, abstract class, typed signature) *and* stated in the spec:
-   inputs, outputs, errors, pre- and postconditions, ownership/lifetime,
-   invariants, an example. A contract test checks each implementation against it.
-3. **A contract is changed deliberately, never in passing.** Changing an interface
-   another module depends on is a question for the owner (`docs/QUESTIONS.md`),
-   answered before the change, and the spec is updated in the same commit.
-4. **Named design patterns.** Each module states the pattern it follows and why
-   (each component's *Pattern* in the spec) — e.g. Strategy for interchangeable algorithms,
-   Adapter behind an external source, Pipeline for staged processing, Factory
-   where the concrete type is chosen by configuration. Use the pattern the spec
-   names; a pattern the spec does not name is a question, not an improvisation.
-5. **Keep every part simple.** One responsibility per module, class and function.
-   The limits in the spec's *Complexity budget* (function length, nesting,
-   parameters, dependencies per module) apply to all code; when a part grows past
-   them, split it along a responsibility — do not add a flag.
-6. **Small tasks.** A task touches one module or one contract and has one
-   observable outcome. A task that does not fit is split in the plan, not
-   implemented large.
+1. **Boundaries first.** Components and the contracts between them are built
+   first — every interface, wired end to end with the simplest implementation (a
+   walking skeleton). Later tasks fill one component at a time.
+2. **Every boundary has a contract**, as code in the project's language and in
+   `docs/SPEC.md` → *Components and contracts*: inputs, outputs, errors,
+   pre/postconditions, ownership, an example, a contract test.
+3. **Contracts change deliberately.** Changing an interface others depend on, or
+   using a pattern the spec does not name, is a question first; the spec changes
+   in the same commit.
+4. **Named patterns.** Each component uses the pattern its spec entry names
+   (Strategy, Adapter, Pipeline, Factory …).
+5. **Keep parts simple.** One responsibility per component, class and function,
+   within the spec's *Complexity budget*; past it, split along a responsibility —
+   never add a flag.
+6. **Small tasks.** One component or contract, one observable outcome. Too big →
+   split in the plan, not implemented large.
 
-| Module | Location | Contract (interface) | Pattern | Contains the change of... |
+| Component | Location | Contract | Pattern | Contains the change of … |
 | --- | --- | --- | --- | --- |
-| {{module}} | {{path}} | {{Interface name}} | {{pattern}} | {{what varies behind it}} |
+| {{component}} | {{path}} | {{Interface}} | {{pattern}} | {{what varies behind it}} |
 
-Adding behind one boundary never requires touching another. If it does, the
-split is wrong — fix the boundaries (via a question) rather than special-casing.
+Adding behind one boundary never requires touching another; if it does, fix the
+boundaries (via a question) rather than special-casing.
 
 ## The output contract
 
 {{Where results go and what else may appear there, e.g. "stdout carries records
 and nothing else; diagnostics go to stderr". Which modes are exempt.}}
 
+## Code
+
+- **Never crash on input:** parsers return errors; no unchecked indexing.
+- **Never lie in the output:** input that is not handled (yet) is refused or
+  skipped visibly — never a plausible wrong result.
+- {{Language rules: error types, no unwrap on input-derived data, unsafe policy,
+  hot-path allocation.}}
+- Every commit leaves the `CHECKS` in `scripts/method.conf` green, the complexity
+  lint included.
+
 ## Modes
 
-The project passes through three modes, in order. The plan
-(`docs/IMPLEMENTATION_PLAN.md` → *Mode allocation*) says which parts of the spec
-are built in which mode; the current mode is in `docs/STATUS.md`.
+The project passes through three modes in order; `docs/IMPLEMENTATION_PLAN.md` →
+*Mode allocation* says what each builds; `docs/STATUS.md` holds the current one.
 
-| | **1. prototype** | **2. harnessing** | **3. production** |
+| | **prototype** | **harnessing** | **production** |
 | --- | --- | --- | --- |
-| Goal | **demonstrate the functionality end to end, quickly and cheaply** | make the prototype trustworthy | complete the product |
-| Builds | the main path from input to output through every module boundary, on the expected input | the test harness, conformance with the authority, edge cases, error handling, removal of prototype shortcuts | the remaining features, robustness, performance, packaging, CI, portability, user documentation |
-| Does not build | edge cases, harnesses, error polish, secondary features | new features | — |
-| Small tests per task | one demonstration test: the task's behaviour on typical input | every behaviour the task names, including edge and malformed cases | as harnessing, plus fuzz targets for untrusted input |
-| Verifier | checks the task works and its demonstration test actually exercises it | proves every new test can fail (mutation) | proves every new test can fail (mutation) |
-| Repair rounds | 1 | 3 | 3 |
-| Phase review | one short combined review | tests + conformance lenses | full panel + completeness critic |
+| Goal | demonstrate end to end, quickly and cheaply | make it trustworthy | complete the product |
+| Builds | the main path through every boundary, on expected input | test harness, conformance, edge cases, errors, shortcut removal | remaining features, robustness, performance, packaging, CI, docs |
+| Small tests per task | one demonstration test | every named behaviour, incl. edge and malformed input | + fuzz targets for untrusted input |
+| Verifier | works? does the demo test exercise it? | every new test proven to fail (mutation) | same + hostile input |
+| Verification unit · repair rounds | per group · 1 | per task · 3 | per task · 3 |
+| Phase review | one short combined | tests + conformance | full panel + critic |
 
-**Prototype means cheap, not dishonest.** Edge cases are not solved, but input
-the prototype does not handle must not produce a plausible wrong result: the
-simplest honest behaviour — refuse, or skip and count on the diagnostic channel
-— is enough. Everything skipped is one `kind: hardening` line in
-`docs/FEATURES.md` with `Disposition: mode: harnessing` (or production); the
-harnessing phases are planned from that list.
+**Prototype means cheap, not dishonest.** Unhandled input is refused or visibly
+skipped; everything skipped is a `kind: hardening` entry in `docs/FEATURES.md`
+for a later mode. Do not add harness, edge cases or polish to a prototype task.
 
-**Never relaxed in any mode:** the prime directive; never lying in the output; a
-test that exists must be able to fail; one commit per task; failure is a stop.
-
-## Non-negotiables for the code itself
-
-- **Never crash on input.** Parsers return errors; indexing without a length
-  check is a bug.
-- **Never lie in the output.**
-- {{Language-specific: error types, no unwrap on input-derived data, unsafe
-  policy, allocation policy on the hot path.}}
-- Every commit leaves the `CHECKS` in `scripts/method.conf` green, including the
-  complexity lint where the language has one.
+**Never relaxed:** the prime directive · never lie in the output · a test that
+exists can fail · one commit per task · failure is a stop.
 
 ## Testing
 
-**Test data:** `docs/DATA.md` (what each data set is, what it covers, which file
-to use for what), `docs/PROVENANCE.md` (where it came from, which tool version
-made it, how to regenerate it) and `docs/TEST_DATA.md` (what is missing). Read
-them before building a fixture. Synthetic data comes from seeded generators,
-validated by a reader that is not ours; an expected result is never produced by
-the code under test (`test-data` skill).
-
 | Tier | When | What |
 | --- | --- | --- |
-| **Small** | every task, before its commit | the task's own tests, at the depth its mode sets, with literal fixtures, and a fast smoke run of the real program. Seconds. |
-| **Comprehensive** | every phase, before its push | the phase exit criterion on the real data, `scripts/gate.sh <n>`, the conformance comparison once it exists, and what the phase's mode adds |
+| **Small** | every task, before its commit | the task's tests at its mode's depth, literal fixtures, a smoke run of the real program |
+| **Comprehensive** | every phase, before its push | `scripts/gate.sh <n>`, the phase exit criterion on real data, conformance once it exists |
 
-- Compare with the authority the way it can be compared: semantically when its
-  output is not byte-reproducible. Byte-for-byte is the test for **our** output
-  against itself: two runs over one input give identical bytes.
-- Known, accepted differences live in `docs/DIVERGENCES.md` with a reason each.
-- A feature may ship unvalidated only if it is a **leaf** (nothing reads its
-  output) and it is registered in `docs/UNVALIDATED.md`.
-
-## Tests that cannot fail
-
-The most common defect in agent-built code: the test observes something *near*
-the behaviour it names instead of the behaviour itself.
-
-**The self-referential fixture** — input built from the same named constant the
-test asserts against moves with any mutation, so the test cannot fail. Rules:
-
-1. **A fixture is literal data, never the constant under test.**
-2. **Every table of magic numbers gets one test pinning each value to a literal,
-   with its citation.**
-
-For every test: *could this still pass if the behaviour it names were broken?*
-Then prove it — break the implementation, run that one test, watch it fail,
-revert. Prefer tests that run the real program and read its real output.
+- **Tests that cannot fail** are the most common defect: a test observes
+  something *near* the behaviour it names. A fixture is **literal data, never the
+  constant under test**; every table of magic numbers has a test pinning each
+  value to a literal with its citation. For every test: *could it pass with the
+  behaviour broken?* Prove it — break the code, run that test, watch it fail,
+  revert. Prefer tests that run the real program.
+- **Test data:** read `docs/DATA.md`, `docs/PROVENANCE.md` and
+  `docs/TEST_DATA.md` before building a fixture. Synthetic data comes from seeded
+  generators validated by a reader that is not ours; an expected result never
+  comes from the code under test (`test-data`).
+- Compare with the authority the way it can be compared (semantically when its
+  output is not byte-reproducible); our own output is byte-identical across runs.
+  Accepted differences: `docs/DIVERGENCES.md`. Unchecked leaves (nothing reads
+  their output): `docs/UNVALIDATED.md`.
 
 ## Working agreement
 
-### Before a phase starts
-
-The phase is **prepared** (`prepare-phase` skill): its tasks are in a fixed
-order with dependencies stated, grouped for implementation, every question that
-affects it is answered, its fixtures are located, and its gate script exists. The
-plan marks this with `Prepared: <date>` under the phase heading. **An
-unprepared phase is not started.**
-
-### One task, one commit
-
-1. The **implementer** implements the task and its small tests on `main`.
-2. Marks it ◐ in the plan (implemented, awaiting verification) and commits:
-   `T2.3: <what>` with the trailer. One task, one commit — tasks implemented in
-   one session as a group still get a commit each.
-3. `scripts/task-audit.sh T2.3` passes.
-4. The **verifier** — an independent, read-only agent — checks the commit against
-   the task and reports problems **with a suggested repair for each**.
-5. The implementer repairs (further commits, same task id); a recheck confirms.
-6. On a pass, the task is marked ☑ in a commit `T2.3: verified`.
-
-Plan markers: ☐ not started · ◐ committed, not yet verified · ☑ verified.
-Only the task's own commits change its marker.
-
-### The push is the phase
-
-Commits accumulate on local `main`. `git push` happens once per **phase**, after
-`scripts/gate.sh <n>` and the comprehensive tests pass, and after the **phase
-report** `docs/reports/<PROJECT>_phase_<n>.md` is written: what the phase
-delivered and how to try it, with every specified command, option or feature
-marked as working, planned or refused — every example in it actually run. Subphases (2A, 2B …) get
-their own checkpoint run of the gate but are not pushed alone. Pushing earlier is
-allowed only when someone needs the work, and then `docs/STATUS.md` says plainly
-that the gate has not passed.
-
-`main` moves forward only: no rebase, squash, amend or force-push once pushed.
-Phase-level commits that belong to no task use the prefix `P<n>: `.
-
-### Questions that arise during implementation
-
-Not everything can be anticipated. When a question comes up:
-- Record it in `docs/QUESTIONS.md` (`Q-n`, the task that raised it, blocking or
-  not, the options).
-- **Blocking** (the answer changes what the task builds): stop the task and ask
-  the owner.
-- **Non-blocking:** proceed on a stated assumption, written in the entry and in
-  the commit message.
-- Every open question is answered by the owner **before the next phase is
-  prepared**; an answer that contradicts an assumption becomes a task.
-
-### New feature requirements found during implementation
-
-Record each in `docs/FEATURES.md` (`F-n`); do not build it inside the current
-task. At the phase's triage the owner gives each one a disposition: a new task in
-a later phase of this cycle, **a future cycle**, or rejected. If input can reach
-an unbuilt feature, the code refuses or visibly skips it.
-
-### Failure is a stop, not a workaround
-
-When a task cannot be completed, stop and report: what was attempted, the exact
-failure output, the likely cause, the decision needed. Do not commit red, weaken
-or delete a test, record a real diff as a divergence to get past it, skip ahead,
-or silently reduce scope.
-
-### Progress, pausing and resuming
-
-- Progress is reported after every task: one line — task, commit, verified or
-  not, what is next. `scripts/progress.sh` prints the whole picture from the plan
-  and git.
-- **All state lives in git** (plan markers and commits), so work can stop at any
-  point. When a usage or rate limit is reached, the run **pauses**: finish or
-  abandon the current step cleanly (never leave a half-edited tree committed),
-  record the pause and the reset time in `docs/STATUS.md` → *Current run*, and
-  stop. Do not retry in a loop.
-- After the reset, the `resume` skill reads `scripts/progress.sh`, verifies every
-  ◐ task first, then continues with the next ☐ task.
+- **Prepared first.** A phase starts only with `Prepared: <date>` in the plan:
+  task order fixed, groups set, questions affecting it answered, environment
+  checked, gate script written (`prepare-phase`).
+- **One task, one commit.** Tasks run in the prepared order. The implementer
+  writes the task and its small tests, marks it ◐, commits `T2.3: <what>` with the
+  trailer, and runs `scripts/task-audit.sh T2.3`. An independent read-only
+  **verifier** reports problems, each with a suggested repair; repairs are further
+  `T2.3:` commits, rechecked against that list only; on a pass the task is marked
+  ☑ in `T2.3: verified`. Tasks of one implementation group may be implemented
+  before the group is verified; the next group starts when the previous one is ☑.
+  Only a task's own commits change its marker (☐ to do · ◐ committed · ☑ verified).
+- **The push is the phase.** `git push` once per phase, after `scripts/gate.sh
+  <n>` passes and the phase report `docs/reports/<PROJECT>_phase_<n>.md` is
+  written (what was done, how to try it, specified vs implemented — every example
+  actually run). Subphases get a checkpoint gate, no push. Pushing a failed gate
+  only when someone needs the work, with `docs/STATUS.md` saying so. `main` moves
+  forward only; phase-level commits use `P<n>: `.
+- **Questions** go to `docs/QUESTIONS.md` at once. Blocking (changes what the task
+  builds): stop and ask. Non-blocking: continue on a stated assumption. All are
+  answered before the next phase is prepared.
+- **New features** go to `docs/FEATURES.md`, never built inside a task; the owner
+  gives each a disposition at the gate (later phase, later mode, future cycle,
+  rejected).
+- **Failure is a stop.** Report what was attempted, the exact output, the likely
+  cause, the decision needed. Never commit red, weaken a test, call a real diff a
+  divergence, skip ahead or silently narrow a task.
+- **Progress and pauses.** One progress line after every task. All state is in git
+  (markers, commits), so at a usage limit: finish or cleanly abandon the step,
+  record the pause and reset time in `docs/STATUS.md` → *Current run*, stop — no
+  retry loop. `resume` verifies ◐ tasks first, then continues.
+- **Tokens.** Mechanical checks are scripts (`task-audit.sh`, `gate.sh`,
+  `progress.sh`, `check-env.sh`); never re-derive them. Targeted tests while
+  working, the full suite once per task, determinism only at the gate.
+  Observations are triaged or not asked for. A dead agent verified nothing.
 
 ## Working with caveman
 
-The `caveman` plugin is installed with phased-dev. It compresses **chat** only;
-files, commits and docs stay in normal prose (its own *Boundaries* rule).
-Its skills are welcome for *how* a step is done; phased-dev defines *what* is
-required. Where they meet:
+The `caveman` plugin compresses **chat** only; files, commits and docs stay in
+normal prose. Its skills may shape *how* a step is done; this file defines *what*
+is required:
 
-1. **Commit subjects** follow this file (`T2.3: …` plus the trailer), whatever a
-   commit-message skill suggests — `task-audit.sh` rejects anything else.
-2. **Never compress** `CLAUDE.md`, `docs/**`, the plan, the spec or the registers
-   (`caveman-compress`, `caveman-learn`): the scripts parse them and rules lose
-   force when shortened.
-3. **Done means** the task's requirement and small test at the mode's depth,
-   proven by the verifier template (mutation included) — not a smaller proof set
-   chosen by `verify-and-stop` or `lean-build`.
-4. **Verification and gate reviews** use phased-dev's prompts in general-purpose
-   agents; `cavecrew-reviewer` / `caveman-review` never replace them.
-   `cavecrew-investigator` is fine for locating code; `cavecrew-builder` only
-   inside the current task, which the main session still tests, commits and
-   audits.
-5. **The one-line progress report** after each task is required output, not
-   narration.
-6. **Decisions put to the owner** (spec decision points, measurement choices,
-   dispositions, blocking questions) are written in full sentences — caveman's
-   Auto-Clarity applies.
+1. Commit subjects stay `T2.3: …` plus the trailer, whatever a commit skill says.
+2. Never compress `CLAUDE.md`, `docs/**`, the plan, spec or registers — the
+   scripts parse them.
+3. Done = the task's requirement and small test at its mode's depth, proven by the
+   verifier — not a smaller proof set (`verify-and-stop`, `lean-build`).
+4. Verifier and gate reviews use phased-dev's prompts; caveman reviewers never
+   replace them. `cavecrew-investigator` is fine; `cavecrew-builder` only inside
+   the current task, which the main session tests, commits and audits.
+5. The per-task progress line is required output.
+6. Decisions put to the owner are written in full sentences (Auto-Clarity).
 
-Details and reasoning: the phased-dev `method` skill, `references/caveman.md`.
+## Documents
 
-## Token discipline
-
-- **Mechanical checks are scripts** (`task-audit.sh`, `gate.sh`, `progress.sh`);
-  never re-derive them in prose. A new way to fail gets a new check, proven to
-  bite.
-- **Targeted tests while working, the full suite once** per task; determinism
-  re-runs only at the gate.
-- **A repair is rechecked against its problem list**, not re-verified from scratch.
-- **Preparation happens once, before the phase**, so the run does not rediscover
-  prerequisites.
-- **Group tasks that share context** into one implementer session; commit each
-  task separately; in prototype mode one verifier takes a whole group.
-- **The prototype is the cheap mode on purpose.** Do not add harness, edge-case
-  handling or polish to a prototype task — record it in `docs/FEATURES.md` for
-  harnessing instead.
-- **Observations are triaged or not requested.** A dead agent is not a pass.
-
-## Registers
-
-| File | Records |
+| File | Holds |
 | --- | --- |
-| `docs/STATUS.md` | where the project is; the current run, pauses |
-| `docs/QUESTIONS.md` | questions, their answers and who gave them |
-| `docs/FEATURES.md` | new features and deferred hardening, each with a disposition |
-| `docs/BACKLOG.md` | defects and improvements in what was built, not blocking |
-| `docs/DIVERGENCES.md` | we differ from the authority on purpose, and why |
-| `docs/UNVALIDATED.md` | we have not checked whether we match; leaves only |
-| `docs/DATA.md` | what the test data is and covers; how to synthesize more |
-| `docs/MEASUREMENTS.md` | choices decided by measurement; every performance claim's evidence |
-| `docs/reports/<PROJECT>_phase_<n>.md` | per phase: what was done, how to try it, specified vs implemented |
-| `docs/ENVIRONMENT.md` | the machines, tools and versions the project is built with; how to set up another |
-| `docs/PROVENANCE.md`, `docs/TEST_DATA.md` | test data origin; what is missing |
+| `docs/CONCEPT.md` | the owner's idea — written by the owner |
+| `docs/SPEC.md` | the design, level by level, and its decision log |
+| `docs/IMPLEMENTATION_PLAN.md` | mode allocation, phases, subphases, tasks |
+| `docs/STATUS.md` | where the project is; the current run and pauses |
+| `docs/QUESTIONS.md` · `docs/FEATURES.md` | questions and answers · new features and their dispositions |
+| `docs/BACKLOG.md` | defects in what was built, not blocking |
+| `docs/DIVERGENCES.md` · `docs/UNVALIDATED.md` | deliberate differences from the authority · unchecked leaves |
+| `docs/DATA.md` · `docs/PROVENANCE.md` · `docs/TEST_DATA.md` | test data catalog · its origin · what is missing |
+| `docs/MEASUREMENTS.md` | performance decisions and their reports |
+| `docs/ENVIRONMENT.md` | machines, tools, versions; how to set up another |
+| `docs/reports/<PROJECT>_phase_<n>.md` | per phase: what was done, how to try it |
 
-Prose that describes behaviour is checked against the behaviour like code is.
+Prose that describes behaviour is checked against the behaviour, like code.
 
 ## Conventions
 
-- {{formatter/lint configuration, package and binary names}}
-- Work through the plan in order. Do not start a task while an earlier one in
-  the same subphase is ☐ or ◐.
+- {{formatter and lint configuration; package and binary names}}

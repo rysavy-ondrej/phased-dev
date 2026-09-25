@@ -1,6 +1,6 @@
 ---
 name: measure
-description: Run a performance measurement that decides between candidate methods, algorithms, data structures or libraries — speed, memory, throughput, sometimes accuracy. Plans the experiment with a decision rule fixed in advance, builds the candidates behind the same contract, checks they produce the same correct output, benchmarks them on representative data with a recorded environment, writes a reproducible report in docs/measurements/, and hands the choice to the owner. Use when the spec leaves a choice pending measurement (M-n), when a task's plan says "measure first", when a performance claim needs evidence, or when production performance targets must be checked.
+description: Decide between candidate methods, algorithms or libraries by measurement — decision rule fixed first, same contract, correctness first, benchmark speed and memory, reproducible report — and let the owner choose. Use for a spec choice pending M-n or any performance claim.
 ---
 
 # Measure

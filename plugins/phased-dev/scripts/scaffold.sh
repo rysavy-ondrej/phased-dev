@@ -36,6 +36,7 @@ else
 fi
 put "$tpl/scripts/phaseN-gate.sh" scripts/phase1-gate.sh
 put "$tpl/workflows/run-phase.js" .claude/workflows/run-phase.js
+put "$here/skills/gate/references/phase-report.md" docs/reports/TEMPLATE.md
 chmod +x "$dest"/scripts/*.sh 2>/dev/null || true
 mkdir -p "$dest/docs/history" "$dest/docs/measurements" "$dest/docs/reports"
 

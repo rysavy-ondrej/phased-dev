@@ -1,6 +1,6 @@
 {
   "name": "phased-dev",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A phased development method for agent-built software, from the owner's concept notes through spec and plan to implementation in three project modes (prototype, harnessing, production): one commit per task, independent verification, push per phase, question and feature registers, progress reporting, pause and resume.",
   "author": {
     "name": "Ondrej Rysavy"

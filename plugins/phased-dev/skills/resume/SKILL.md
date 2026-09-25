@@ -1,6 +1,6 @@
 ---
 name: resume
-description: Resume a paused or interrupted phased-dev implementation — after a usage or rate limit reset, a crashed or closed session, or a stopped workflow — by reconstructing the state from git and the plan, verifying any committed-but-unverified task first, and continuing with the next task. Use when the user says resume, continue, carry on, or after a limit reset.
+description: Resume paused or interrupted phased-dev work — after a usage limit, a closed session or a stopped workflow — from git state: verify ◐ tasks first, then continue. Use when the user says resume or continue, or after a limit reset.
 ---
 
 # Resume

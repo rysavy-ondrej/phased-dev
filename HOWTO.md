@@ -337,7 +337,9 @@ For each task, in the prepared order:
 2. It **commits** the task (`T1.3: parse the combined format`) and marks it ◐.
 3. `scripts/task-audit.sh T1.3` checks the commit follows the rules.
 4. An **independent verifier** agent checks the work and reports problems, each
-   with a **suggested repair**.
+   with a **suggested repair**. In the prototype, tasks that touch the same code
+   form a group, and one verifier checks the whole group once all of it is
+   committed.
 5. Problems are repaired and rechecked (at most 1 round in the prototype, 3
    later).
 6. The task is marked ☑, and you get one progress line:

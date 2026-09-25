@@ -1,6 +1,6 @@
 ---
 name: test-data
-description: Analyze an optional data corpus the owner provides (demo data, samples, captures, logs, datasets) and describe it in docs/DATA.md — structure, value distributions, cases present, sensitivity, and which spec behaviour it covers — then create synthetic test data from that description with deterministic, seeded generators whose output is validated independently. Use when the owner provides sample data, when a task or phase needs fixtures, when coverage has gaps (edge cases, malformed input), or when real data cannot be committed.
+description: Describe the owner's sample data corpus in docs/DATA.md (structure, cases, sensitivity, coverage of the spec) using scripts, and generate seeded synthetic test data validated by an independent tool. Use when sample data is provided or a phase needs fixtures.
 ---
 
 # Test data

@@ -1,6 +1,6 @@
 ---
 name: question
-description: Record a question that arises during concept review, specification, planning or implementation in docs/QUESTIONS.md, decide whether it blocks the current task, and get it answered by the owner at the right time. Use when something about what to build is ambiguous or undecided, when a library outside the allowed list seems needed, or when the user asks to record or answer questions.
+description: Record a question about what to build in docs/QUESTIONS.md, decide whether it blocks the current task, and get the owner's answer in time. Use when something is ambiguous or undecided, or a library outside the allowed list seems needed.
 ---
 
 # Question
