@@ -19,5 +19,7 @@ bad() { checked=$((checked + 1)); fail=$((fail + 1)); printf 'FAIL  %s\n' "$1"; 
 
 # check 1: ...
 
+# A gate with no checks graded nothing; that is a failure, not a pass.
+[ "$checked" -gt 0 ] || bad "this phase gate has no checks yet -- write the exit criterion as checks"
 echo "phase gate: $checked checks, $fail failure(s)"
 [ "$fail" -eq 0 ]

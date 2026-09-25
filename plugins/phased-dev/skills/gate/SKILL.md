@@ -1,93 +1,89 @@
 ---
 name: gate
-description: Step 5 of the phased-dev method — close a phase: run scripts/gate.sh and the phase's exit criterion on real data, re-run every DIVERGENCES claim, review the phase (four lenses plus a critic in production, one combined review in prototype), triage findings into BACKLOG or OUT_OF_SCOPE, write STATUS and the phase history, and push only if the gate passed. Use when all tasks of a phase are committed and verified, or when asked whether a phase is done.
+description: Step 6 of the phased-dev method — complete a phase: run the comprehensive tests (scripts/gate.sh and the phase exit criterion on real data), re-check every documented divergence, review the phase at the depth its mode sets, triage findings, have the owner dispose of new features and answer open questions, update STATUS, and push. Use when every task of a phase is verified (☑), or when asked whether a phase is done.
 ---
 
 # Gate
 
-A phase is not done when its tasks are; it is done when its exit criterion has
-passed on real data and nothing blocking was found. The push to the remote is
-the only gate, which makes it load-bearing.
+A phase is complete when its comprehensive tests pass, not when its tasks do.
+The push happens here, once per phase.
 
-## 1. The mechanical gate
+## 1. Mechanical
 
 ```bash
-scripts/gate.sh <N>        # or <N><part>, e.g. 3B
+scripts/gate.sh <N>
 ```
 
-Checks and gate-only builds, three-run determinism, the phase's boxes all ticked
-and no later phase's, free scratch space, and `scripts/phase<N>-gate.sh`. Every
-FAIL is a problem. Do not re-check any of it by hand.
+Green checks and gate-only builds, three-run determinism, the phase prepared and
+every task ☑, nothing later started, no open blocking question, free scratch
+space, and `scripts/phase<N>-gate.sh`. Every FAIL is a problem; do not re-check
+any of it by hand. If the phase added a way to fail that the script cannot see,
+add the check now and **prove it bites**.
 
-If this phase added a way to fail the script cannot see, add the check to
-`gate.sh` (section 4) or the phase script now, and **prove it bites** — break the
-thing, watch the FAIL, restore — before relying on it.
+## 2. Comprehensive test — judgement
 
-## 2. What needs judgement
+By an agent (or yourself), high effort, "be hard to satisfy":
 
-Run by an agent (or yourself) with high effort, "be hard to satisfy":
+1. **The phase exit criterion** on the real data, all of it. Prototype: the
+   demonstration runs and shows what it claims. Harnessing: the conformance
+   comparison with the authority, the way `CLAUDE.md` says it can be compared.
+   Production: plus the quality targets (measure performance claims).
+2. **Every `docs/DIVERGENCES.md` claim** is still literally true — run each.
+3. **Unbuilt features** reached by input behave as their `FEATURES.md` entry says.
+4. **`docs/UNVALIDATED.md`**: no entry gained a consumer this phase.
 
-1. **The exit criterion**, quoted from the plan, on the **real** data — all of it,
-   not a sample. Measure any performance claim. Compare with the authority the
-   way `CLAUDE.md` says it can be compared (semantic comparison when the
-   authority's output is not byte-reproducible; byte comparison for our own
-   output across runs).
-2. **Every `docs/DIVERGENCES.md` claim is literally true** — run each one.
-3. *Prototype*: every parked `OOS-n` behaves as its *If reached* line says.
-4. `docs/UNVALIDATED.md`: no entry has gained a consumer this phase (the leaf
-   rule).
+Actual commands and real output, not paraphrase. Fix nothing here.
 
-Record actual commands and real output, not paraphrase. Fix nothing at this
-step: the gate is a test, not a repair.
+## 3. Review, at the mode's depth
 
-## 3. Review
+- **prototype** — one short combined review: does the phase demonstrate what it
+  set out to, end to end? Is any output a plausible wrong answer? Was harness or
+  edge-case work done that belongs to harnessing (cost), or is a seam missing
+  that harnessing will need (rewrite risk)?
+- **harnessing** — two lenses: *tests* (every new test can fail; fixtures not
+  self-referential; coverage of every behaviour rule) and *conformance* (each
+  task met / partly / unmet; every invariant it touches).
+- **production** — four lenses (seams, tests, robustness, conformance) in parallel,
+  then a completeness critic given all findings: what did everyone miss?
 
-- **production**: four lenses in parallel — *seams* (anything forcing a refactor
-  later, leaking types), *tests* (hollow tests, mutation of the most important
-  behaviour per task), *robustness* (crash paths, unchecked indexing, unbounded
-  growth, diagnostics reaching the output channel), *conformance* (each task's
-  requirement met / partial / unmet; every invariant it could touch) — then a
-  **completeness critic** given all findings: what did everyone miss?
-- **prototype**: one combined review: claims met, central assertions survive
-  mutation, no path produces a plausible wrong result, nothing out of scope was
-  built, nothing needed was parked, no seam forces a rewrite at graduation.
+A lens that died has not reported "nothing"; the gate waits for it (see *Pausing*
+in the `implement` skill).
 
-The `run-phase` workflow does steps 2–4 for you. A lens that died did not report
-"nothing found"; the gate has not passed until it has reported.
+## 4. Triage and owner decisions
 
-## 4. Triage — or the findings evaporate
-
-Check each observation and finding against the repository **now** (later tasks
-fix some), drop duplicates, then:
+Check each observation and finding against the code **now**, drop what is fixed
+or duplicated, then:
 - defects and improvements in what was built → `docs/BACKLOG.md` under
-  `## Phase N`, numbered, one line each with severity, file/symbol, what is
-  wrong, the later task that should settle it;
-- *prototype*: features or hardening outside the question →
-  `docs/OUT_OF_SCOPE.md`;
-- **blockers are not triaged** — each becomes a remediation task in the plan
-  (`### Phase N gate remediation`, `T<N>.<next>`), implemented with `implement`,
-  and the gate is re-run from step 1.
+  `## Phase N`, numbered, with severity, file/symbol, and the task that should
+  settle it;
+- things not built → `docs/FEATURES.md` (`feature` skill);
+- **blockers** → remediation tasks in this phase (`T<N>.<next>`), prepared and
+  implemented, then the gate re-runs from step 1.
 
-Commit: `P<N>: triage the phase review`.
+Then with the owner, in one round:
+- every `F-n` with `Disposition: proposed` gets a disposition: **planned** (a task
+  in a named later phase — add it), **mode: harnessing/production**, **future
+  cycle**, or **rejected**;
+- every open `Q-n` is answered (`scripts/progress.sh questions`) — the next
+  phase cannot be prepared while one affecting it is open.
 
-## 5. Record and push
+Commit as `P<N>: triage and dispositions`.
+
+## 5. Record, push
 
 - `docs/STATUS.md`: the phase row — what is established (with numbers), what the
-  gate ran, what it still cannot see, what the next phase inherits. Then a short
-  *what it cost and what it taught* section: gate rounds, the defect that
-  defined the phase, a rule to add to `CLAUDE.md` if one shape of defect recurred.
-  Naming a recurring failure in the constitution is worth more than any amount
-  of re-verification.
-- When a phase closes, move its long narrative to `docs/history/phase-<N>.md`;
-  STATUS says where the project *is*.
-- Tick the gate task if the plan has one — by the evidence, not the gate's own
-  say-so.
-- **Push only if the gate passed**, and only with the owner's go-ahead. Pushing
-  a phase whose gate has not passed is allowed when someone needs the work, and
-  then STATUS says plainly what failed. Silence about a failed gate is the
-  violation.
-- After the push, check CI is green before the next phase starts.
+  gate cannot see yet, what the next phase inherits; a short *what it cost and
+  what it taught* (repair rounds, the defect that recurred — if one did, name the
+  rule in `CLAUDE.md`). Clear *Current run*. Move long narrative to
+  `docs/history/phase-<N>.md`.
+- **Push** (`git push`) once the gate passes, confirming with the owner the first
+  time. A push without a passing gate is allowed only when someone needs the
+  work, with STATUS saying plainly what failed.
+- Check CI after the push.
 
-## Before the next phase
+## 6. Next
 
-Run the next phase's readiness check (see `plan`) and write it into the plan.
+- More phases in this mode → `prepare-phase` for phase N+1.
+- **Last phase of a mode** (the prototype exit, or conformance reached): update
+  the mode in `docs/STATUS.md`, then `plan` the next mode in detail from its
+  allocation column, `mode:` dispositions and the backlog.

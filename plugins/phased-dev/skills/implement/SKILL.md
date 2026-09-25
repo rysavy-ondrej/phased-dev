@@ -1,109 +1,104 @@
 ---
 name: implement
-description: Step 4 of the phased-dev method — execute a phase of docs/IMPLEMENTATION_PLAN.md task by task (production) or batch by batch (prototype) on linear main, with tests in the same commit, scripts/task-audit.sh, an independent adversarial verifier, and bounded repair rounds; stop and report on failure. Use when the user asks to implement a task, batch or phase of a plan written with this method.
+description: Step 5 of the phased-dev method — implement a prepared phase of docs/IMPLEMENTATION_PLAN.md task by task in the prepared order; each task gets its small tests, one commit (marked ◐), the audit script, an independent verifier that checks it and suggests repairs, bounded repair rounds, and a ☑ commit when verified. Reports progress after every task, records questions and new features as they arise, and pauses cleanly at a usage or rate limit. Use when asked to implement a task, a subphase or a phase.
 ---
 
 # Implement
 
-Read `CLAUDE.md` (binding), the phase in `docs/IMPLEMENTATION_PLAN.md` including
-its *Readiness* and *Batches*, and `scripts/method.conf` for the profile and the
-commands.
+Read `CLAUDE.md` (binding — especially *Modes* and *Working agreement*), the
+phase in `docs/IMPLEMENTATION_PLAN.md` with its *Preparation*, and
+`scripts/method.conf`. Run `scripts/progress.sh`.
 
-**Before the first unit:** the tree is clean and green, the phase's
-`scripts/phase<N>-gate.sh` exists (write it first if not — it grades the phase
-and must exist before the code it grades), and every readiness item marked as
-needing a decision has one. Missing any of these is a stop.
+**Preconditions — each missing one is a stop:** the phase has `Prepared:
+<date>` (otherwise run `prepare-phase`); no open *blocking* question affects it
+(`scripts/progress.sh questions`); the tree is clean and the `CHECKS` are green;
+`scripts/phase<N>-gate.sh` exists.
 
-## Two ways to run
+The **mode** of the phase (the `# Prototype / # Harnessing / # Production`
+heading above it) sets test depth, verifier strength and repair rounds —
+`CLAUDE.md` → *Modes*. In prototype mode, resist doing more: no edge cases, no
+harness, no polish. Record what you skip as hardening (`feature` skill).
 
-**A. The `run-phase` workflow** (scaffolded into `.claude/workflows/`). Use it
-when the user asks to run a whole phase unattended. Args:
-`{phase: 2, profile: "prototype"}`; `{only: ["T2.3"]}` to re-run tasks;
-`{groups: [[...]]}` to override batches; `{skipReview: true}` to land work
-without the gate. It stops on the first blocked unit and returns why. It spawns
-many agents; say so and confirm before a production run.
+## Roles
 
-**Skip the Scope agent for small re-runs.** Scope reads the whole plan and the
-relevant source to write each task's brief — a fixed cost of the same order as
-implementing one task, which a run of one or two tasks cannot amortise. When you
-already know the tasks (a single remediation task, a re-run after a block),
-write the briefs yourself and pass them:
+- **Implementer** — writes the code and small tests and commits. By default the
+  main session (its context is already loaded); for an unattended run, an agent
+  per implementation group (the `run-phase` workflow).
+- **Verifier** — an independent, read-only agent. Checks the commit against the
+  task and returns reproduced problems, **each with a suggested repair**. It
+  never edits code.
 
-```js
-{
-  phase: 3,
-  tasks: [{
-    id: "T3.17",
-    slug: "reused-5-tuple",
-    spec: "<the plan requirement, quoted verbatim, plus the context the implementer needs: file:line it starts from, the invariant or settled decision it touches>",
-    smallScale: "<the test that would fail if the behaviour broke, naming its target>",
-  }],
-  phaseExit: "<quoted from the plan, if the gate will run>",
-  notes: "<readiness items and traps that apply>",
-  skipReview: true,   // unless this run should also close the phase
-}
-```
+## The loop, per task, in the prepared order
 
-The brief is only as good as what you put in it: quote the requirement
-verbatim and name the code it extends, or the implementer builds a parallel
-scheme. Passing `tasks` also bypasses the plan's Batches table: under the
-prototype profile the supplied tasks run as **one batch**, so pass `groups` if
-they should be split. For a single task
-with no need to run unattended, prefer mode B below, which skips both Scope and
-the implementer agent.
+1. **Implement** the task. Real code; the only placeholder allowed is an explicit
+   refusal ("not supported yet: F-n") where the plan says so.
+2. **Small tests** in the same commit, at the mode's depth. Fixtures are literal
+   data, never the constant under test; a new table of magic numbers gets a test
+   pinning each value to a literal with its citation. Run targeted tests while
+   working, the full suite once before committing.
+3. **Questions** that come up → `question` skill. Blocking: stop the task and
+   ask. Non-blocking: continue on a stated assumption (in the entry and the
+   commit message).
+4. **New features** that come up → `feature` skill. Never built inside the task.
+5. **Commit**: mark the task ◐ in the plan (that line only — a sed on `T1.1` also
+   hits `T1.10`), commit `T2.3: <what>` with the trailer.
+6. **Audit**: `scripts/task-audit.sh T2.3` must exit 0; fix with a further
+   `T2.3:` commit.
+7. **Verify**: spawn one Agent (general-purpose, high effort) with the prompt in
+   `references/verifier-prompt.md` for this task's mode. In prototype mode, when a
+   whole implementation group is committed, one verifier takes the group. A
+   verifier that returns nothing verified nothing — re-run it, never count it as
+   a pass.
+8. **Repair**: for each reproduced problem, apply (or improve on) the suggested
+   repair in a further `T2.3:` commit, add the test that would have caught it,
+   and have a **recheck** agent confirm against that problem list only. Rounds:
+   prototype 1, harnessing/production 3. Problems that survive are a stop.
+9. **Mark verified**: flip ◐ → ☑, commit `T2.3: verified`. Keep the verifier's
+   non-blocking observations for the phase triage (a running list, or straight
+   into `docs/BACKLOG.md` under the phase).
+10. **Report progress** — one line to the user:
+    `T2.3 ☑ (a1b2c3d, 0 repairs) — 4/7 in phase 2 — next: T2.4`.
+    Update `docs/STATUS.md` → *Current run* at the end of each group.
 
-**B. In session** — the default for a prototype and for single tasks. The main
-session is the implementer (no subagent: the context is already loaded), and one
-independent verifier agent checks each unit. Steps below.
+At the end of a **subphase**, run `scripts/gate.sh <N><sub>` as a checkpoint.
+At the end of the **phase**, go to `gate` — the push happens there.
 
-## The loop, per unit (a task, or a prototype batch)
+## Pausing at a usage or rate limit
 
-1. **Implement** the unit's tasks. Real code; no placeholders except a runtime
-   "not implemented in this phase" refusal where the plan asks for one.
-2. **Tests in the same commit.** Fixtures are literal data, never the constant
-   under test; a new table of magic numbers gets a test pinning each value to a
-   literal with its citation. Run the targeted tests while working, the full
-   suite once at the end.
-   - *production*: mutation-prove every test you add — break the
-     implementation, run that one test, watch it fail, revert.
-   - *prototype*: write each test to fail if its behaviour broke; note, per task,
-     the single assertion the claim rests on. The verifier mutation-proves those.
-3. **Scope (prototype).** A feature outside the question came up? Use `park`:
-   record it, make the code refuse it visibly if input can reach it, continue.
-   Never park something the unit's own requirement asks for — that is a stop.
-4. **Tick** the unit's checkboxes (☐ → ☑) — those lines only (a sed on `T1.1`
-   also hits `T1.10`; check the diff).
-5. **Commit once**: `T2.1, T2.2, T2.3: <what>` (or `T1.3: <what>`), with the
-   trailer. Linear `main`, no branch, no amend, no push.
-6. **Audit**: `scripts/task-audit.sh <id>` for each task id. It checks subject,
-   trailer, clean tree, protected paths, checkbox ownership, unpushed, and runs
-   the checks. Fix with a further commit carrying the same id list.
-7. **Verify** — spawn one Agent (general-purpose, high effort) with the prompt
-   in `references/verifier-prompt.md`, filled for this unit. It is read-only and
-   adversarial. A verifier that returns nothing verified nothing: re-run it,
-   never count it as a pass.
-8. **Repair** reproduced problems with a further commit (same id list), proving
-   each fix by mutation and adding the test that would have caught it. Then a
-   **recheck** agent checks only that problem list and the repair diff
-   (`references/verifier-prompt.md`, recheck section). Max rounds: production 3,
-   prototype 1. Problems that survive are a stop.
-9. **Observations** the verifier returns (non-blocking) are kept for the phase's
-   triage — append them to a running list in the session, or straight into
-   `docs/BACKLOG.md` under the phase.
-10. Update the phase row in `docs/STATUS.md` in the unit's commit when the unit
-    changes what the project can do.
+Work can stop at any moment; all state is in git, so stopping is safe if the
+tree is clean.
+
+- When a limit is reached (an agent dies with a limit error, or you are warned
+  the session is near it), **do not start a new step and do not retry in a
+  loop.** Finish the current commit if it is complete and green; otherwise
+  discard the partial edit (`git restore`/`git clean` only on files this task
+  touched — look before deleting).
+- Record in `docs/STATUS.md` → *Current run*: `Paused: yes — <limit>, at <time>,
+  resets at <time if known>` and `Next step on resume: <scripts/progress.sh next>`;
+  commit it as `P<N>: pause`.
+- Tell the user it is paused, why, and when it can resume. If the host offers a
+  scheduler (a one-off scheduled task, `/loop`), offer to run `/phased-dev:resume`
+  after the reset time.
+- The `resume` skill continues: ◐ tasks are verified first, then the next ☐.
+
+## Running unattended: the `run-phase` workflow
+
+`.claude/workflows/run-phase.js` runs the same loop with agents. It spawns many
+agents, so use it only when the user asks for an unattended run.
+`{phase: 2}` runs the phase in the prepared order; `{phase: 2, subphase: "2A"}`
+one subphase; `{only: ["T2.3"]}` named tasks; `{skipReview: true}` lands tasks
+without the gate. When an agent dies (typically a limit), the workflow returns
+`paused` with the next step instead of a verdict. Resume with Workflow's
+`resumeFromRunId` in the same session (completed agents are replayed from cache),
+or later with the `resume` skill, which reads git.
+
+For a re-run of one or two known tasks, skip its Scope agent by passing the
+briefs: `{phase: 3, tasks: [{id, slug, spec, smallScale}], notes, skipReview:
+true}` — quote the requirement verbatim and name the code it extends.
 
 ## Failure is a stop
 
-When the unit cannot be completed — approach fails, a test fails with no obvious
-fix, the authority will not match, a plan assumption is wrong — stop and report:
-what was attempted, the exact failure output, the likely cause, and what
-decision is needed. Do not commit red, weaken a test, record a real diff as a
-divergence to get past it, skip ahead, or narrow scope silently.
-
-## Token discipline while implementing
-
-- Do not re-read what the plan's readiness section already established.
-- Do not run the whole suite repeatedly; determinism belongs to the gate.
-- Do not restate CLAUDE.md in agent prompts — agents read it; name the section.
-- Prototype: one implementer context per batch; one verifier per batch.
+When a task cannot be completed, stop and report what was attempted, the exact
+failure output, the likely cause, and the decision needed. Never commit red,
+weaken a test, record a real diff as a divergence to get past it, skip ahead, or
+silently narrow the task.

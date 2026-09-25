@@ -1,107 +1,85 @@
 ---
 name: plan
-description: Step 3 of the phased-dev method — write docs/IMPLEMENTATION_PLAN.md as phases with runnable exit criteria, tasks with small-scale tests, a readiness check per phase, settled decisions, and (prototype profile) a Batches table that groups tasks to be implemented, committed and verified together to save tokens. Use after specify, before any phase is implemented, or when a plan needs re-cutting.
+description: Step 3 of the phased-dev method — turn the confirmed spec into docs/IMPLEMENTATION_PLAN.md: propose which parts of the spec are built in which project mode (prototype, harnessing, production), then phases 1..N with subphases, tasks with small tests and runnable phase exit criteria. The prototype is planned in detail and kept minimal; later modes are outlined. Use after specify, when moving to the next mode, or when a plan needs re-cutting.
 ---
 
 # Plan
 
-Goal: a plan an agent can execute without rediscovering anything, where every
-phase ends in something runnable and checkable.
+Read `CLAUDE.md` (*Modes*), `docs/SPEC.md` (confirmed), `docs/CONCEPT.md` (the
+prototype milestone), `docs/FEATURES.md`, `docs/TEST_DATA.md`.
 
-Read `CLAUDE.md`, `docs/CONCEPT.md`, `docs/TEST_DATA.md` and the profile in
-`scripts/method.conf`.
+## 1. Propose the mode allocation
 
-## 1. Phases
+For every spec item — each component, interface, behaviour rule, quality target —
+decide what each mode does with it, and fill the *Mode allocation* table:
 
-Each phase ends with a **runnable program** and adds capability without
-restructuring what came before. Phase 0 is the skeleton: the full interface of
-the final tool (unimplemented options refuse with a clear "not implemented in
-this phase"), configuration, diagnostics, error taxonomy. Order phases so each
-one's output is observable, and so seams are fixed before anything hangs off
-them.
+- **Prototype: the least that demonstrates the functionality end to end.** The
+  main path on expected input, through every seam once. Ask of each item: *is the
+  demonstration impossible without it?* If not, it is not prototype work. No
+  edge cases, no harness, no error polish, no secondary features, no
+  performance work. The only robustness is honesty: unhandled input is refused
+  or visibly skipped.
+- **Harnessing: what makes the prototype trustworthy.** Tests for every behaviour
+  rule, conformance with the authority on the full data, edge and malformed
+  input, error handling, gate scripts, removal of prototype shortcuts.
+- **Production: what completes the product.** Remaining features, robustness
+  against hostile input, performance targets, packaging, CI, portability,
+  user documentation.
 
-Every phase has:
-- **Goal** — one sentence.
-- **Phase exit** — a command and what it must produce, on real data. Not "works
-  well". It will become `scripts/phase<N>-gate.sh`, written at the phase's first
-  task, before the code it grades.
-- **Readiness** — checked before the run: which fixtures exist for it (so
-  nobody hand-builds what real data already covers), dependencies it adds,
-  owner decisions it waits on, interface that already exists. Each finding is
-  either *decided* (with a settled decision) or *recorded so the run does not
-  re-derive it*.
+State the **prototype exit**: one demonstration (a command on sample data and
+what it shows) that ends the prototype.
 
-A phase wider than ~8 tasks, or mixing a foundational seam with the things built
-on it, is split into parts (`### Part 3A — ...`), each gated on its own; a part
-that produces nothing observable runs without a gate and is gated with the next.
+**Show the allocation to the owner and get it confirmed** before writing
+phases — it is the decision that sets the cost of the whole project. Record
+disagreements as answered questions.
 
-## 2. Tasks
+## 2. Phases and subphases
 
-`- ☐ **T<phase>.<n> Title.** Requirement.` Each requirement is precise enough
-that a verifier can quote it and answer met / partially met / unmet. Each names
-its **small-scale test**: the test that would fail if the behaviour were broken,
-and its test target. Name the authority's fixtures the task must use.
+- Phases are numbered **1..N across the whole plan**, grouped under the headings
+  `# Prototype`, `# Harnessing`, `# Production` (the scripts read the mode from
+  them).
+- Each phase ends with a **runnable program** and adds capability without
+  restructuring what came before; seams are fixed before anything hangs off them.
+- Split a phase into **subphases A, B, C** (`### Subphase 2A — …`) when it is wider
+  than ~6–8 tasks or mixes a foundation with what is built on it. Subphases get a
+  checkpoint gate run; the push waits for the whole phase.
+- Every phase has a **Goal** and a **Phase exit**: a command and what it must
+  produce, on real data, graded by `scripts/phase<N>-gate.sh`. Prototype exits
+  are demonstrations; harnessing exits are conformance results; production exits
+  include the quality targets.
 
-Put a task in the plan rather than inside another when it touches everything (a
-refactor) or when it is the most consequential signature in the project — riding
-along with other work is how both go wrong at once.
+**Detail only the prototype now.** Harnessing and production phases are an
+outline (title and a line or two of scope): what the prototype teaches changes
+them, and detail written now would be rewritten. Plan the next mode in detail
+when the previous one exits (see `method/references/modes.md`).
 
-## 3. Batches (prototype — required; production — optional "groups")
+A prototype is typically 1–3 phases. More suggests the allocation put
+harnessing work in the prototype — re-check it.
 
-Before any code, cut each phase into batches. This is where the prototype's
-token savings come from: the dominant cost of an agent is reading context, and a
-batch pays for one read across several tasks, one commit, and one verification.
+## 3. Tasks
 
-A batch is a set of tasks that:
-1. **share context** — the same module or files, so one implementer holds them;
-2. **are verified together** — one command or test file demonstrates all of them;
-3. **have one demonstrable outcome** — something the verifier can run.
+`- ☐ **T<phase>.<n> Title.** Requirement.` Ids are unique within a phase
+(subphases do not restart numbering). Each requirement is precise enough to quote
+and judge met / partly / unmet, and names its **small test** at the depth of its
+mode: a demonstration test in prototype, every named behaviour in harnessing and
+production. Name the existing fixtures it must use.
 
-Rules:
-- 2–6 tasks per batch; size each S/M/L by how much must be read and written.
-- **A task that is foundational or correctness-critical gets a batch of its
-  own** (the seam everything depends on; the component with a bounded-memory or
-  security requirement). A verifier splitting attention is how such a
-  requirement goes unobserved.
-- A batch never spans a seam boundary and the things built on it.
-- Order batches so each starts from a green, committed predecessor.
-- Record the table under the phase:
+Give a task its own line rather than burying it in another when it touches
+everything (a refactor) or is the most consequential interface in the project.
 
-```markdown
-### Batches
+Do **not** fix task order or groups here — that is `prepare-phase`, done just
+before each phase, when the code it builds on exists.
 
-| Batch | Tasks | Shared context | Verified together by | Size |
-| --- | --- | --- | --- | --- |
-| B2.1 | T2.1, T2.2, T2.3 | src/decode/link.rs | `cargo test --test link` + `prog --dump flow` on data/x | M |
-| B2.2 | T2.4 | src/decode/reassembly.rs (bounded memory) | `cargo test --test reassembly` | L |
-```
+## 4. Deferred work
 
-Estimate the phase's cost in agent runs: prototype ≈ batches × (1 implementer +
-1 verifier + ≤1 repair/recheck pair) + gate + 1 review + triage. If that is
-disproportionate to the question, cut scope (park) before cutting verification.
+Everything the prototype deliberately skips that a later mode must do is a
+`kind: hardening` entry in `docs/FEATURES.md` with `Disposition: mode:
+harnessing` or `mode: production` — or is covered by the allocation table's later
+columns. Nothing skipped is left unrecorded.
 
-## 4. Scope pass (prototype)
+## 5. Gate scripts and status
 
-Walk every task against *the question* in `CONCEPT.md`. A task that does not
-serve it is removed and parked (`park` skill). A task that serves it partly is
-narrowed **in the plan text**, with the removed part parked — never narrowed
-silently during implementation. Hardening a production plan would contain
-(fuzzing, hostile-input suites, benchmarks, portability) is listed under
-*Deferred hardening* in `OUT_OF_SCOPE.md` instead of becoming tasks.
-
-## 5. Settled decisions
-
-Every choice made while planning that someone might later reopen: a row with
-the decision, the reason, the measurement behind it, who ruled and when, and
-what would reopen it. Owner decisions come from the owner; propose, do not rule.
-
-## 6. Gate scripts
-
-For each phase, create `scripts/phase<N>-gate.sh` from `scripts/phase0-gate.sh`
-— or note in the phase's first task that it must be written first. Update
-`scripts/method.conf` commands if the plan adds build variants or features.
-
-## 7. Review with the owner
-
-Show the phase list, the batches, the readiness decisions that need a ruling, and
-the estimated agent runs for the first phase. Then `implement`.
+Create `scripts/phase<N>-gate.sh` for each detailed phase from
+`scripts/phase1-gate.sh`'s template (or leave it to that phase's preparation).
+Set `docs/STATUS.md` → mode `prototype`, and list the phases. Then
+`prepare-phase` for phase 1.

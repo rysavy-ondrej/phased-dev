@@ -1,13 +1,14 @@
 export const meta = {
   name: 'run-phase',
-  description: 'Implement one phase of docs/IMPLEMENTATION_PLAN.md: tasks or planned batches, each verified before the next, then the full-scale phase test, review and backlog triage',
-  whenToUse: 'Run a phase of the plan. Args {phase: N}. Optional: {only: ["T1.3"]}, {groups: [["T2.1","T2.2"],["T2.3"]]}, {profile: "prototype"|"production"}, {repairRounds: n}, {skipReview: true}.',
+  description: 'Implement one prepared phase (or subphase) of docs/IMPLEMENTATION_PLAN.md unattended: tasks in the prepared order, one commit each, independent verification with suggested repairs, then the comprehensive phase test, review and triage. Pauses cleanly when an agent dies (e.g. a usage limit).',
+  whenToUse: 'Args {phase: N}. Optional: {subphase: "2A"} run one subphase (checkpoint, no review); {only: ["T2.3"]} named tasks; {tasks: [{id, slug, spec, smallScale}], mode, notes} skip the Scope agent; {skipReview: true}; {repairRounds: n}.',
   phases: [
-    { title: 'Scope', detail: 'read the plan and extract this phase\'s tasks and batches' },
+    { title: 'Scope', detail: 'read the prepared phase: order, groups, mode, task states' },
     { title: 'Implement' },
     { title: 'Verify' },
     { title: 'Repair' },
     { title: 'Recheck' },
+    { title: 'Record' },
     { title: 'Phase test' },
     { title: 'Review' },
     { title: 'Triage' },
@@ -15,73 +16,84 @@ export const meta = {
 }
 
 // ---------------------------------------------------------------------------
-// Generalised from the maestro-enjoy run-phase workflow. Every rule in the
-// prompts below was bought by a measured failure there; see the phased-dev
-// plugin's skills/method/references/lessons.md for the numbers.
+// Part of the phased-dev plugin. The rules the prompts name live in the
+// project's CLAUDE.md; skills/method/references/lessons.md says why each exists.
 //
-// Profiles
-//   production  one agent per task (or per planned group), adversarial
-//               verification with mutation proof of every test, up to 3
-//               repair rounds, a four-lens review panel plus a critic.
-//   prototype   the plan's Batches table drives execution: ONE agent implements
-//               a whole batch and commits it once, ONE verifier proves the
-//               batch's central claims by mutation, ONE repair round, then a
-//               single combined review. Parked features go to OUT_OF_SCOPE.md.
+// State is in git, never only here: a task is ☐ (not started), ◐ (committed,
+// unverified) or ☑ (verified) in the plan. So when an agent dies -- usually a
+// usage or rate limit -- this workflow stops and returns `paused` with the next
+// step. Resume with Workflow's resumeFromRunId in the same session (completed
+// agents replay from cache), or later with the `resume` skill, which reads git.
 // ---------------------------------------------------------------------------
 
 const REPO = (args && args.repo) || '.'
 const PHASE = (args && args.phase) != null ? String(args.phase) : null
-const PROFILE = (args && args.profile) || 'production'
-const PROTO = PROFILE === 'prototype'
-const MAX_REPAIRS = (args && args.repairRounds) || (PROTO ? 1 : 3)
+const SUBPHASE = (args && args.subphase) || null
 const ONLY = (args && args.only && args.only.length) ? args.only : null
-let GROUPS = (args && args.groups && args.groups.length) ? args.groups : null
-
 if (PHASE == null) throw new Error('run-phase needs args {phase: N}')
 
 const SCOPE_SCHEMA = {
   type: 'object',
   properties: {
+    prepared: { type: 'boolean', description: "the phase has a 'Prepared: <date>' line" },
+    mode: { type: 'string', enum: ['prototype', 'harnessing', 'production'] },
     tasks: {
       type: 'array',
+      description: 'in the PREPARED order, excluding ☑ tasks',
       items: {
         type: 'object',
         properties: {
           id: { type: 'string' },
           slug: { type: 'string' },
-          spec: { type: 'string', description: 'the plan requirement quoted verbatim, plus context the implementer needs' },
-          smallScale: { type: 'string', description: 'the small-scale test this task must ship, naming its test target' },
+          state: { type: 'string', enum: ['todo', 'implemented'], description: '☐ = todo, ◐ = implemented (committed, unverified)' },
+          group: { type: 'string', description: 'implementation group from the Preparation table, e.g. G2' },
+          spec: { type: 'string', description: 'the requirement quoted verbatim, plus context the implementer needs' },
+          smallScale: { type: 'string', description: 'the small test, naming its target' },
         },
-        required: ['id', 'slug', 'spec', 'smallScale'],
+        required: ['id', 'slug', 'state', 'spec', 'smallScale'],
       },
     },
-    batches: { type: 'array', items: { type: 'array', items: { type: 'string' } }, description: "the plan's Batches table for this phase, as lists of task ids; empty if the plan has none" },
+    blockingQuestions: { type: 'array', items: { type: 'string' }, description: 'open Q-n affecting this phase that are marked blocking' },
     phaseExit: { type: 'string' },
     notes: { type: 'string' },
   },
-  required: ['tasks', 'phaseExit'],
+  required: ['prepared', 'mode', 'tasks', 'blockingQuestions', 'phaseExit'],
 }
 const IMPL_SCHEMA = {
   type: 'object',
   properties: {
-    completed: { type: 'boolean' },
-    summary: { type: 'string' },
-    small_scale_test: { type: 'string' },
-    parked: { type: 'array', items: { type: 'string' }, description: 'OOS ids added to docs/OUT_OF_SCOPE.md' },
-    blocker: { type: 'string' },
+    completed: { type: 'array', items: { type: 'string' }, description: 'task ids committed (◐) with a clean audit' },
+    summaries: { type: 'array', items: { type: 'string' }, description: 'one per task: "<id>: what was built; the assertion the claim rests on; assumptions made"' },
+    questions: { type: 'array', items: { type: 'string' }, description: 'Q-n ids recorded in docs/QUESTIONS.md' },
+    blockingQuestion: { type: 'string', description: 'a Q-n that stopped the work, if any' },
+    features: { type: 'array', items: { type: 'string' }, description: 'F-n ids recorded in docs/FEATURES.md' },
+    blocker: { type: 'string', description: 'why the work stopped, with the exact failure output' },
   },
-  required: ['completed', 'summary'],
+  required: ['completed', 'summaries'],
 }
 const VERDICT_SCHEMA = {
   type: 'object',
   properties: {
     pass: { type: 'boolean' },
-    problems: { type: 'array', items: { type: 'string' }, description: 'reproduced defects only' },
-    observations: { type: 'array', items: { type: 'string' }, description: 'judgement calls; must NOT fail the task' },
+    problems: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          task: { type: 'string' },
+          problem: { type: 'string', description: 'file:line, what is wrong, the reproducing command' },
+          suggested_repair: { type: 'string', description: 'the concrete change you would make' },
+        },
+        required: ['task', 'problem', 'suggested_repair'],
+      },
+    },
+    observations: { type: 'array', items: { type: 'string' } },
+    questions: { type: 'array', items: { type: 'string' }, description: 'ambiguities in the requirement' },
     evidence: { type: 'string' },
   },
   required: ['pass', 'problems', 'evidence'],
 }
+const DONE_SCHEMA = { type: 'object', properties: { ok: { type: 'boolean' }, detail: { type: 'string' } }, required: ['ok'] }
 const PHASE_TEST_SCHEMA = {
   type: 'object',
   properties: { pass: { type: 'boolean' }, gate_script: { type: 'string' }, transcript: { type: 'string' }, problems: { type: 'array', items: { type: 'string' } } },
@@ -102,123 +114,106 @@ const REVIEW_SCHEMA = {
   required: ['findings'],
 }
 
-// --- Shared prose: name the CLAUDE.md rule, do not restate it ---------------
+// --- Shared prose ----------------------------------------------------------
 
 const READ_ONLY = `## Read-only
-The work is committed on \`main\`. Do NOT run git checkout, switch, merge, reset,
-commit, stash or rebase. Inspect with git log/show/diff. If you make a scratch
-edit to prove a point, REVERT it and confirm \`git status --porcelain\` is empty.`
+Do NOT run git checkout, switch, merge, reset, commit, stash or rebase, and edit
+nothing except scratch mutations you revert. Confirm \`git status --porcelain\`
+is empty before finishing.`
 
-const PASS_FAIL = `## pass/fail
-pass=false ONLY for a defect you reproduced: an unmet requirement, a hollow test,
-a wrong behaviour, a sentence of prose the code contradicts. Judgement calls go
-in \`observations\` and must NOT fail the task; they are triaged into
-docs/BACKLOG.md, so write each so it makes sense to someone who never saw this
-task. Every problem needs file:line and the exact command that reproduces it.`
+const TESTS = `Run only the tests you are working on or mutating; the full suite once at the end.`
 
-const TEST_DISCIPLINE = `## Running tests
-Mutation proof needs the one test being mutated, not the suite. Run the whole
-suite ONCE at the end. Determinism re-runs happen at the phase gate only.`
-
-const MUTATION = `CLAUDE.md, "Tests that cannot fail", is binding. For every test: could it
-still pass if the behaviour it names were broken? Prove the answer — break the
-*implementation* at the exact construct the test names, run that one test, watch
-it fail, REVERT, confirm a clean tree. Check fixtures for the self-referential
-shape: input built from the constant under test cannot fail.`
-
-const MUTATION_PROTO = `CLAUDE.md, "Tests that cannot fail", is binding for every claim the prototype
-makes. You do not need to mutation-prove every test. For each task, find the
-ONE assertion the task's claim rests on, break the implementation behind it,
-run that one test, watch it fail, REVERT. A central claim that survives mutation
-is a defect whatever the test count says.`
-
-const SCOPE_RULE = `## Scope (prototype)
-CLAUDE.md, *Profile*: features outside the question in docs/CONCEPT.md are
-parked, not built and not dropped. If one comes up, add an OOS entry to
-docs/OUT_OF_SCOPE.md, make the code refuse or visibly skip it if input can reach
-it, and continue. Hardening you deliberately skip (fuzzing, malformed-input
-suites, polish) is one line under *Deferred hardening*. Never park something the
-task's own requirement asks for — that is reducing scope, and it is a stop.`
-
-const subject = ids => `${ids.join(', ')}: <short description>`
-
-function implPrompt(group, notes, prior) {
-  const ids = group.map(t => t.id)
-  const one = group.length === 1
-  return `You are implementing ${one ? `task ${ids[0]}` : `batch ${ids.join(' + ')} (${group.length} tasks, implemented together and committed once)`} in the repository at ${REPO}.
-
-Read CLAUDE.md and docs/IMPLEMENTATION_PLAN.md first. The working agreement and the prime directive are binding.
-
-## ${one ? 'The task' : 'The tasks'}
-
-${group.map(t => `### ${t.id} — ${t.slug}\n${t.spec}\n\n**Small-scale test:** ${t.smallScale}`).join('\n\n')}
-
-${notes ? `## About this phase\n\n${notes}\n` : ''}
-## Already done in this phase
-
-${prior.length ? prior.map(s => '- ' + s).join('\n') : '- nothing yet'}
-
-## Process
-
-1. Confirm \`main\` is clean and green (\`scripts/task-audit.sh\` needs a commit, so run the CHECKS from scripts/method.conf). A red tree you inherited is a stop, not yours to paper over.
-2. Implement. Real code, no placeholders.
-3. Tests in the same commit. **Fixtures are literal data, never the constant under test.** A new table of magic numbers gets one test pinning each value to a literal with its citation. ${PROTO || !one ? 'You are NOT required to mutation-prove every test here: an independent verifier does that next. Say in your summary which single assertion matters most per task and what would break it.' : MUTATION}
-4. Tick ${one ? `the ${ids[0]} checkbox` : `the checkboxes of ${ids.join(', ')}`} (☐ → ☑) in docs/IMPLEMENTATION_PLAN.md — those lines and no other. A sed on T1.1 also rewrites T1.10; check the diff.
-5. Commit ONCE on \`main\` with subject "${subject(ids)}" and the Co-Authored-By trailer.
-6. Run \`scripts/task-audit.sh <id>\` for ${one ? 'the task' : 'each task'}. It must exit 0. Fix with a further commit carrying the same subject prefix.
-7. STOP.
-
-${PROTO ? SCOPE_RULE : ''}
-
-${TEST_DISCIPLINE}
-
-## Hard rules
-- Do not push, rebase, amend or force-push. Do not touch the protected paths in scripts/method.conf.
-- If you cannot complete the work, STOP: no weakened test, no stubbed requirement, no red commit. Return completed=false with the exact failure output and your diagnosis.`
+function depth(mode) {
+  if (mode === 'prototype') return `Mode **prototype** (CLAUDE.md → Modes): demonstrate the functionality on typical input, quickly and cheaply. One demonstration test per task. No edge cases, no harness, no polish — record each thing you deliberately skip as a \`kind: hardening\` entry in docs/FEATURES.md with \`Disposition: mode: harnessing\`. Unhandled input must be refused or visibly skipped, never turned into a plausible wrong result.`
+  return `Mode **${mode}** (CLAUDE.md → Modes): tests for every behaviour the task names, including edge and malformed input${mode === 'production' ? ', plus fuzz targets for untrusted input' : ''}.`
 }
 
-function verifyPrompt(group, summaries) {
+function verifyChecks(mode) {
+  const common = `- Is the requirement met, or stubbed, partial, quietly narrowed? Quote it, then the code.
+- Run the real program on real (sample) data; look for a wrong result.
+- Unhandled input is refused or visibly skipped — never a plausible wrong result.
+- Prose the work added (help, doc comments, docs) matches the behaviour.`
+  if (mode === 'prototype') return `${common}
+- The demonstration test really exercises the behaviour: break the behaviour, run that test, watch it fail, revert. One mutation per task.
+- Do NOT raise missing edge cases, harness or polish as problems — that is harnessing work; note them in observations.`
+  return `${common}
+- CLAUDE.md "Tests that cannot fail": EVERY new test can fail. Break the implementation at the exact construct each test names, run that test, watch it fail, revert. Check fixtures for the self-referential shape.
+- The edge and malformed inputs the requirement names are handled and tested.${mode === 'production' ? '\n- Find one hostile input the tests do not throw.' : ''}`
+}
+
+const OUTPUT = `## Output
+pass=false ONLY for a defect you reproduced. Each problem: task id; file:line,
+what is wrong and the reproducing command; and a concrete suggested_repair.
+Judgement calls go in observations and do NOT fail the work. Ambiguities in the
+requirement go in questions.`
+
+// --- Prompts ---------------------------------------------------------------
+
+function implPrompt(group, mode, notes, prior) {
   const ids = group.map(t => t.id)
-  return `Adversarially verify ${ids.join(', ')} in ${REPO}, committed on \`main\`. Assume the work does NOT meet its specification until the evidence forces the opposite.
+  return `You are the implementer for ${ids.length === 1 ? `task ${ids[0]}` : `tasks ${ids.join(', ')}, in this order`} in ${REPO}.
+
+Read CLAUDE.md (binding) and the phase in docs/IMPLEMENTATION_PLAN.md first.
+
+${depth(mode)}
+
+## The tasks
+${group.map(t => `### ${t.id} — ${t.slug}\n${t.spec}\n\n**Small test:** ${t.smallScale}`).join('\n\n')}
+
+${notes ? `## About this phase\n${notes}\n` : ''}
+## Already done in this phase
+${prior.length ? prior.map(s => '- ' + s).join('\n') : '- nothing yet'}
+
+## For EACH task, in order
+1. Implement it. Real code.
+2. Its small tests in the same commit. Fixtures are literal data, never the constant under test; a new table of magic numbers gets a test pinning each value to a literal with its citation. You do not need to mutation-prove them — the verifier does.
+3. Mark it ◐ in docs/IMPLEMENTATION_PLAN.md (that line only — a sed on T1.1 also hits T1.10).
+4. Commit ONLY this task: subject "<id>: <what>", with the Co-Authored-By trailer. One task, one commit.
+5. Run \`scripts/task-audit.sh <id>\`; it must exit 0 (fix with a further "<id>:" commit).
+
+## When something comes up
+- A question the documents do not settle: record it in docs/QUESTIONS.md (question skill format). If it is blocking — the answer changes what you build — STOP after the last clean commit and return it in blockingQuestion. Otherwise continue on a stated assumption, written in the entry and the commit message.
+- A new feature or idea outside the task: record it in docs/FEATURES.md (feature skill format, Disposition: proposed). Do not build it.
+- Libraries: only those in docs/SPEC.md → Allowed libraries. Needing another is a blocking question.
+
+## Hard rules
+No push, rebase, amend, or branch. Do not touch the protected paths in scripts/method.conf. If a task cannot be completed: no red commit, no weakened test, no silently narrowed requirement — stop and return the exact failure output in blocker. Return the ids you completed.
+
+${TESTS}`
+}
+
+function verifyPrompt(unit, mode, summaries) {
+  const ids = unit.map(t => t.id)
+  return `Verify ${ids.join(', ')} in ${REPO}, committed on main and marked ◐. Assume the work does NOT meet its requirement until the evidence forces the opposite.
 
 ${READ_ONLY}
 
-## First, the mechanical audit
-\`\`\`
+## First, the audit
 ${ids.map(id => `scripts/task-audit.sh ${id}`).join('\n')}
-\`\`\`
-Every FAIL line is a problem, copied verbatim with its task id. Do not re-check by hand what the script checks.
+Every FAIL line is a problem. Do not re-check by hand what it checks.
 
-## The specifications
-${group.map(t => `### ${t.id}\n${t.spec}\n\n**Small-scale test:** ${t.smallScale}`).join('\n\n')}
+## The requirements (mode: ${mode})
+${unit.map(t => `### ${t.id}\n${t.spec}\n\n**Small test:** ${t.smallScale}`).join('\n\n')}
 
 ## What the implementer reported
-${summaries.map(s => `- ${s}`).join('\n')}
+${summaries.length ? summaries.map(s => '- ' + s).join('\n') : '- (committed before this run; read the commits)'}
 
 ## What to check
-- Is every requirement genuinely implemented, or stubbed, partial, or quietly narrowed? Quote the requirement, then the code.
-- ${PROTO ? MUTATION_PROTO : MUTATION}
-- Run the real program on the real data. Hunt for an input that produces a wrong result; report the invocation.
-- Does any prose the work added (help, doc comments, docs/*.md) claim something the code does not do?
-${group.length > 1 ? '- Between the tasks: a helper one added and another works around; a requirement each assumed the other covered.' : ''}
-${PROTO ? '- Was anything parked in docs/OUT_OF_SCOPE.md that the requirement itself asks for? That is scope reduction, and it is a problem. Does input that reaches a parked feature get refused or visibly skipped, rather than a plausible wrong result?' : ''}
+${verifyChecks(mode)}
 
-${TEST_DISCIPLINE}
+${TESTS}
 
-${PASS_FAIL}
-Attribute every problem to a task id.`
+${OUTPUT}`
 }
 
 function repairPrompt(ids, problems, round) {
-  return `${ids.join(', ')} in ${REPO} is committed on \`main\` and verification found real problems. Fix them with a further commit (repair round ${round}).
+  return `Verification of ${ids.join(', ')} in ${REPO} found reproduced problems. You are the implementer; fix them (repair round ${round}).
 
-${problems.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+${problems.map((p, i) => `${i + 1}. [${p.task}] ${p.problem}\n   Suggested repair: ${p.suggested_repair}`).join('\n')}
 
-For each: fix it, then prove the fix — break the behaviour again, watch the specific test fail, revert. If no test would have caught it, add one in the same commit.
-Run scripts/task-audit.sh for each id, and commit with subject exactly "${subject(ids)}" plus the trailer — the id list is how the audit knows which tasks a commit belongs to.
-Never fix a problem by weakening the test that exposes it, and prefer fixing behaviour over rewording the prose that describes it. If a problem is not real, say so with evidence instead of changing code to appease it.
+For each: apply the suggested repair or a better one, add the test that would have caught it, prove it — break the fix, watch that test fail, revert. Commit per task, subject "<task id>: <what you fixed>" with the trailer; run scripts/task-audit.sh for each id. Never fix a problem by weakening the test that exposes it; prefer fixing behaviour over rewording prose. If a problem is not real, say so with evidence instead of changing code. Return the ids you repaired in completed.
 
-${TEST_DISCIPLINE}`
+${TESTS}`
 }
 
 function recheckPrompt(ids, problems, round) {
@@ -227,192 +222,211 @@ function recheckPrompt(ids, problems, round) {
 ${READ_ONLY}
 
 ## The problems it was supposed to fix
-${problems.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+${problems.map((p, i) => `${i + 1}. [${p.task}] ${p.problem}`).join('\n')}
 
-1. Run scripts/task-audit.sh for each id; every FAIL line is a problem.
-2. For EACH problem: reproduce the original failure against the code as it stands. It must no longer reproduce. A problem "fixed" by rewording, deleting a test or narrowing an assertion is not fixed.
+1. scripts/task-audit.sh for each id; every FAIL is a problem.
+2. For EACH problem: reproduce the original failure now. It must not reproduce. "Fixed" by rewording, deleting a test or narrowing an assertion is not fixed.
 3. For each: break the fix, run the covering test, watch it fail, revert.
-4. Read the repair diff only and judge whether it broke a neighbour.
-Do NOT re-derive the whole task.
+4. Read only the repair diff; did it break a neighbour?
+Do NOT re-verify the whole task.
 
-${PASS_FAIL}`
+${OUTPUT}`
 }
 
 // ---------------------------------------------------------------------------
 
-log(`Phase ${PHASE} (${PROFILE}): reading the plan.`)
-phase('Scope')
+const done = []
+const observations = []
+const questions = []
+const features = []
+const prior = []
 
+function paused(stage, detail) {
+  log(`PAUSED during ${stage}: ${detail}`)
+  return {
+    phase: PHASE, paused: true, stage, detail, completed: done, questions, features, observations,
+    resume: 'Same session: Workflow resumeFromRunId with this run id. Later: the resume skill (reads scripts/progress.sh). Record the pause in docs/STATUS.md → Current run.',
+  }
+}
+function blocked(stage, detail, extra) {
+  log(`BLOCKED during ${stage}: ${detail}`)
+  return { phase: PHASE, blocked: { stage, detail, ...(extra || {}) }, completed: done, questions, features, observations }
+}
+
+phase('Scope')
 let scope
 if (args && args.tasks) {
-  scope = { tasks: args.tasks, batches: [], phaseExit: args.phaseExit || '(supplied by caller)', notes: args.notes || '' }
+  scope = { prepared: true, mode: args.mode || 'prototype', tasks: args.tasks.map(t => ({ state: 'todo', ...t })), blockingQuestions: [], phaseExit: args.phaseExit || '(supplied by caller)', notes: args.notes || '' }
 } else {
-  const skipRule = ONLY
-    ? `Return EXACTLY these tasks: ${ONLY.join(', ')}, even if already ticked ☑ — the caller named them.`
-    : 'Skip tasks already marked ☑.'
-  scope = await agent(`Read ${REPO}/docs/IMPLEMENTATION_PLAN.md and extract what is needed to execute **Phase ${PHASE}**.
+  scope = await agent(`Read ${REPO}/docs/IMPLEMENTATION_PLAN.md, ${REPO}/docs/QUESTIONS.md and ${REPO}/CLAUDE.md, and extract what is needed to run **Phase ${PHASE}${SUBPHASE ? `, subphase ${SUBPHASE} only` : ''}**.
 
-For each task, in plan order: id; slug; spec — the requirement QUOTED VERBATIM plus any context the implementer needs from elsewhere (a CLAUDE.md invariant, a settled decision, the state of the code it extends — read src/ so it extends rather than duplicates); smallScale — the test that would FAIL if the behaviour were broken, naming its test target.
-
-Also: phaseExit (quoted); notes — the phase's Readiness section, shared traps, dependencies it adds; batches — the phase's Batches table as lists of task ids (empty if none).
-
-${skipRule}`, { label: `scope:P${PHASE}`, phase: 'Scope', schema: SCOPE_SCHEMA, effort: 'high' })
-  if (!scope || !scope.tasks || !scope.tasks.length) {
-    return { phase: PHASE, blocked: { stage: 'scope', detail: 'no tasks extracted — wrong phase, or all done?' } }
-  }
+- prepared: whether the phase has a "Prepared: <date>" line.
+- mode: from the "# Prototype" / "# Harnessing" / "# Production" heading the phase sits under.
+- tasks: in the order of the phase's Preparation table (plan order if there is none), EXCLUDING tasks marked ☑. For each: id; slug; state (☐ → todo, ◐ → implemented); group (from the Preparation table); spec — the requirement QUOTED VERBATIM plus the context the implementer needs (the invariant or spec section it touches, the code it extends — read src/ so it extends rather than duplicates); smallScale — the small test, naming its target.
+- blockingQuestions: open questions in docs/QUESTIONS.md marked blocking that affect this phase.
+- phaseExit: quoted. notes: the Preparation section's findings and traps.
+${ONLY ? `Return ONLY these tasks: ${ONLY.join(', ')} — even if marked ☑.` : ''}
+You may run \`scripts/progress.sh\` to cross-check the task states.`, { label: `scope:${SUBPHASE ? SUBPHASE : "P" + PHASE}`, phase: 'Scope', schema: SCOPE_SCHEMA, effort: 'medium' })
+  if (!scope) return paused('scope', 'the scope agent returned nothing')
 }
 
+if (!scope.prepared) return blocked('scope', `phase ${PHASE} is not prepared — run the prepare-phase skill first`)
+if (scope.blockingQuestions && scope.blockingQuestions.length) return blocked('scope', `open blocking question(s): ${scope.blockingQuestions.join(', ')} — answer them first (question skill)`)
+
+const MODE = scope.mode
+const MAX_REPAIRS = (args && args.repairRounds) || (MODE === 'prototype' ? 1 : 3)
 let tasks = scope.tasks
-if (ONLY) {
-  tasks = tasks.filter(t => ONLY.includes(t.id))
-  const missing = ONLY.filter(id => !tasks.some(t => t.id === id))
-  if (missing.length) return { phase: PHASE, blocked: { stage: 'scope', detail: `only named tasks the scope agent did not return: ${missing.join(', ')}` } }
+if (ONLY) tasks = tasks.filter(t => ONLY.includes(t.id))
+if (!tasks.length) log(`Phase ${PHASE}${SUBPHASE || ''}: no unverified task left.`)
+
+// Implementation groups, in the prepared order of their first task.
+const groups = []
+for (const t of tasks) {
+  const key = t.group || t.id
+  let g = groups.find(x => x.key === key)
+  if (!g) groups.push(g = { key, tasks: [] })
+  g.tasks.push(t)
 }
+log(`Phase ${PHASE}${SUBPHASE || ''} (${MODE}): ${tasks.length} task(s) in ${groups.length} group(s): ${groups.map(g => g.tasks.map(t => t.id).join('+')).join(' | ')}`)
 
-if (!GROUPS && scope.batches && scope.batches.length) GROUPS = scope.batches
-// Tasks the caller supplied by hand were chosen together, so under prototype
-// they are one batch unless the caller grouped them otherwise.
-if (!GROUPS && PROTO && args && args.tasks) GROUPS = [tasks.map(t => t.id)]
-if (PROTO && !GROUPS) {
-  // Batching is planned, not improvised: a prototype phase without a Batches
-  // table is a planning gap, and running it per task is the expensive default.
-  return { phase: PHASE, blocked: { stage: 'scope', detail: 'prototype profile but the plan has no Batches table for this phase — run the plan skill first, or pass args.groups' } }
-}
-const runGroups = GROUPS
-  ? GROUPS.map(ids => tasks.filter(t => ids.includes(t.id))).filter(g => g.length)
-  : tasks.map(t => [t])
-if (GROUPS) {
-  const placed = new Set(runGroups.flat().map(t => t.id))
-  const orphans = tasks.filter(t => !placed.has(t.id)).map(t => t.id)
-  if (orphans.length) return { phase: PHASE, blocked: { stage: 'scope', detail: `tasks in no batch would be silently skipped: ${orphans.join(', ')}` } }
-}
-log(`${runGroups.length} unit(s): ${runGroups.map(g => g.map(t => t.id).join('+')).join(' | ')}`)
-
-const done = []
-const prior = []
-const observations = []
-const parked = []
-let blocked = null
-
-for (const group of runGroups) {
-  const ids = group.map(t => t.id)
-  const label = ids.join('+')
-
-  // Production with groups keeps one implementer per task (a verifier then takes
-  // the group); prototype hands the whole batch to one implementer, because the
-  // context read is the cost being amortised.
-  const implUnits = PROTO ? [group] : group.map(t => [t])
+const total = tasks.length
+for (const g of groups) {
+  const todo = g.tasks.filter(t => t.state !== 'implemented')
   const summaries = []
-  for (const unit of implUnits) {
+
+  // --- implement: one agent per group, one commit per task ------------------
+  if (todo.length) {
     phase('Implement')
-    const impl = await agent(implPrompt(unit, scope.notes, prior), { label: `impl:${unit.map(t => t.id).join('+')}`, phase: 'Implement', schema: IMPL_SCHEMA })
-    if (!impl || !impl.completed) {
-      blocked = { task: unit.map(t => t.id).join(', '), stage: 'implement', detail: (impl && (impl.blocker || impl.summary)) || 'implementer returned nothing' }
-      break
+    const impl = await agent(implPrompt(todo, MODE, scope.notes, prior), { label: `impl:${todo.map(t => t.id).join('+')}`, phase: 'Implement', schema: IMPL_SCHEMA })
+    if (!impl) return paused('implement', `the implementer for ${todo.map(t => t.id).join(', ')} returned nothing; tasks it committed are ◐ and will be verified on resume`)
+    ;(impl.questions || []).forEach(q => questions.push(q))
+    ;(impl.features || []).forEach(f => features.push(f))
+    ;(impl.summaries || []).forEach(s => { summaries.push(s); prior.push(s) })
+    if (impl.blockingQuestion) return blocked('implement', `blocking question ${impl.blockingQuestion} — answer it, then resume`, { question: impl.blockingQuestion })
+    const missing = todo.filter(t => !(impl.completed || []).includes(t.id)).map(t => t.id)
+    if (missing.length) return blocked('implement', impl.blocker || `not completed: ${missing.join(', ')}`)
+  }
+
+  // --- verify: prototype per group, otherwise per task ----------------------
+  const units = MODE === 'prototype' ? [g.tasks] : g.tasks.map(t => [t])
+  for (const unit of units) {
+    const ids = unit.map(t => t.id)
+    const label = ids.join('+')
+    const keep = v => {
+      ;(v.observations || []).forEach(o => observations.push(`${label}: ${o}`))
+      ;(v.questions || []).forEach(q => questions.push(`${label} (verifier): ${q}`))
     }
-    summaries.push(`${unit.map(t => t.id).join(', ')}: ${impl.summary}`)
-    prior.push(`${unit.map(t => t.id).join(', ')}: ${impl.summary}`)
-    ;(impl.parked || []).forEach(p => parked.push(p))
-  }
-  if (blocked) break
+    phase('Verify')
+    let v = await agent(verifyPrompt(unit, MODE, summaries.filter(s => ids.some(id => s.startsWith(id)))), { label: `verify:${label}`, phase: 'Verify', schema: VERDICT_SCHEMA, effort: 'high' })
+    if (!v) return paused('verify', `the verifier for ${label} returned nothing — ${label} is committed (◐) and UNVERIFIED`)
+    keep(v)
 
-  // A null verdict is a dead verifier, and a dead verifier is not a pass.
-  const record = v => v && (v.observations || []).forEach(o => observations.push(`${label}: ${o}`))
-  let verdict = await agent(verifyPrompt(group, summaries), { label: `verify:${label}`, phase: 'Verify', schema: VERDICT_SCHEMA, effort: 'high' })
-  record(verdict)
-  if (!verdict) { blocked = { task: label, stage: 'verify', detail: `verifier died: ${label} is committed and UNVERIFIED. Re-run with only: [${ids.map(i => `"${i}"`).join(', ')}]` }; break }
+    let round = 0
+    let problems = v.pass ? [] : v.problems
+    while (problems.length && round < MAX_REPAIRS) {
+      round++
+      log(`${label}: ${problems.length} problem(s), repair round ${round}/${MAX_REPAIRS}`)
+      const r = await agent(repairPrompt(ids, problems, round), { label: `repair${round}:${label}`, phase: 'Repair', schema: IMPL_SCHEMA })
+      if (!r) return paused(`repair ${round}`, `the repair agent for ${label} returned nothing`)
+      if (r.blockingQuestion) return blocked(`repair ${round}`, `blocking question ${r.blockingQuestion}`, { question: r.blockingQuestion })
+      v = await agent(recheckPrompt(ids, problems, round), { label: `recheck${round}:${label}`, phase: 'Recheck', schema: VERDICT_SCHEMA, effort: 'high' })
+      if (!v) return paused(`recheck ${round}`, `the recheck for ${label} returned nothing — repair round ${round} is UNCONFIRMED`)
+      keep(v)
+      problems = v.pass ? [] : v.problems
+    }
+    if (problems.length) return blocked('verify', `${label}: problems survived ${round} repair round(s)`, { problems })
 
-  let round = 0
-  let problems = verdict.pass ? [] : verdict.problems
-  while (problems.length && round < MAX_REPAIRS) {
-    round++
-    const repair = await agent(repairPrompt(ids, problems, round), { label: `repair${round}:${label}`, phase: 'Repair', schema: IMPL_SCHEMA })
-    if (!repair || !repair.completed) { blocked = { task: label, stage: `repair ${round}`, detail: (repair && repair.blocker) || 'repair returned nothing', problems }; break }
-    verdict = await agent(recheckPrompt(ids, problems, round), { label: `recheck${round}:${label}`, phase: 'Recheck', schema: VERDICT_SCHEMA, effort: 'high' })
-    record(verdict)
-    if (!verdict) { blocked = { task: label, stage: `recheck ${round}`, detail: 'recheck died; repair UNCONFIRMED', problems }; break }
-    problems = verdict.pass ? [] : verdict.problems
+    // --- record: ◐ → ☑, one commit per task ---------------------------------
+    phase('Record')
+    const rec = await agent(`In ${REPO}, verification of ${ids.join(', ')} passed. For each id, in docs/IMPLEMENTATION_PLAN.md change its marker from ◐ to ☑ (that line only) and commit with subject "<id>: verified" and the Co-Authored-By trailer — one commit per id. Then run scripts/task-audit.sh for each id; it must exit 0. Change nothing else. Return ok=true when done.`, { label: `record:${label}`, phase: 'Record', schema: DONE_SCHEMA, effort: 'low' })
+    if (!rec || !rec.ok) return paused('record', `${label} passed verification but was not marked ☑ — mark it on resume`)
+    ids.forEach(id => done.push({ id, repairRounds: round }))
+    log(`${label} ☑ (${round} repair round(s)) — ${done.length}/${total} this run`)
   }
-  if (blocked) break
-  if (problems.length) { blocked = { task: label, stage: 'verify', detail: `problems survived ${round} repair round(s)`, problems }; break }
-  ids.forEach(id => done.push({ id, repairRounds: round }))
-  log(`${label} committed and verified (${round} repair round(s))`)
 }
 
-if (blocked) {
-  log(`BLOCKED at ${blocked.task} during ${blocked.stage} — stopping, as the working agreement requires`)
-  return { phase: PHASE, profile: PROFILE, blocked, completed: done, observations, parked }
+if (SUBPHASE) {
+  // A subphase ends in a checkpoint, not a review or a push.
+  phase('Phase test')
+  const cp = await agent(`In ${REPO}, run \`scripts/gate.sh ${SUBPHASE}\` and return its last 30 lines in gate_script verbatim; pass = exit status 0; problems = its FAIL lines; transcript = the command and output. Fix nothing.`, { label: `checkpoint:${SUBPHASE}`, phase: 'Phase test', schema: PHASE_TEST_SCHEMA, effort: 'low' })
+  if (!cp) return paused('checkpoint', `the checkpoint for ${SUBPHASE} returned nothing`)
+  return { phase: PHASE, subphase: SUBPHASE, mode: MODE, completed: done, questions, features, observations, checkpoint: cp }
 }
-if (args && args.skipReview) return { phase: PHASE, profile: PROFILE, blocked: null, completed: done, observations, parked, note: 'gate skipped' }
+if (args && args.skipReview) return { phase: PHASE, mode: MODE, completed: done, questions, features, observations, note: 'gate skipped' }
 
-// --- The phase gate --------------------------------------------------------
+// --- The comprehensive phase test -------------------------------------------
 
 phase('Phase test')
-const phaseTest = await agent(`You are running the FULL-SCALE phase test for Phase ${PHASE} in ${REPO}. This is the gate before the phase is pushed; be hard to satisfy.
+const phaseTest = await agent(`Run the COMPREHENSIVE test for Phase ${PHASE} (mode: ${MODE}) in ${REPO}. It gates the phase's push; be hard to satisfy.
 
-Run \`scripts/gate.sh ${PHASE}\`. Put its last 30 lines in gate_script verbatim. Every FAIL line is a problem. A missing phase gate script is itself a problem. Do not re-check by hand what it checked.
+Run \`scripts/gate.sh ${PHASE}\`; put its last 30 lines in gate_script verbatim. Every FAIL is a problem; do not re-check by hand what it checked.
 
-Spend your judgement on:
-1. **The exit criterion**: ${scope.phaseExit}
-   Test it against the REAL data, not a subset. Measure any performance claim. Compare with the authority the way CLAUDE.md says it can be compared.
-2. **docs/DIVERGENCES.md is literally true**: run each claim.${PROTO ? '\n3. **docs/OUT_OF_SCOPE.md is honest**: for each parked entry, the program behaves as its "If reached" line says.' : ''}
+Then judge:
+1. The exit criterion: ${scope.phaseExit}
+   On the REAL data, all of it. ${MODE === 'prototype' ? 'The demonstration runs end to end and shows what it claims.' : 'Compare with the authority the way CLAUDE.md says it can be compared.'}${MODE === 'production' ? ' Measure the quality targets.' : ''}
+2. docs/DIVERGENCES.md: run every claim; each must still be literally true.
+3. docs/FEATURES.md: input that reaches an unbuilt feature behaves as its "If reached" line says.
 Also report any check scripts/gate.sh could make and does not.
 
-pass=false if anything fails. Put actual commands and real output in transcript. Fix nothing.`, { label: `phase-test:P${PHASE}`, phase: 'Phase test', schema: PHASE_TEST_SCHEMA, effort: 'high' })
+pass=false if anything fails. Actual commands and real output in transcript. Fix nothing.`, { label: `phase-test:P${PHASE}`, phase: 'Phase test', schema: PHASE_TEST_SCHEMA, effort: 'high' })
+if (!phaseTest) return paused('phase test', 'the comprehensive test returned nothing — re-run it on resume')
 
-const LENSES = PROTO
-  ? [{ key: 'combined', prompt: `Review Phase ${PHASE} of ${REPO} (main) in one pass, proportionate to a prototype (CLAUDE.md, *Profile*). Change no files.
-1. **Claims**: for each task, quote the requirement and say met / partially / unmet with evidence.
-2. **Tests**: ${MUTATION_PROTO}
-3. **Lies**: any path where the output could be a plausible wrong result instead of a refusal or visible skip — the one robustness property a prototype keeps.
-4. **Scope**: anything built that is out of the question in docs/CONCEPT.md (should have been parked), and anything parked that the question needs.
-5. **Seams**: anything that would force a rewrite, not an extension, at graduation.
-Severity blocker/major/minor.` }]
-  : [
-      { key: 'seams', prompt: `Review Phase ${PHASE} of ${REPO} (main) against CLAUDE.md "Architecture seams": anything forcing a refactor when a later seam arrives, types leaking across a seam, platform code outside its seam. Severity blocker/major/minor. Change no files.` },
-      { key: 'tests', prompt: `Review the QUALITY of every test added in Phase ${PHASE} of ${REPO} (main). ${MUTATION} Assume there is a hollow one you have not found. Look for tests that drive a neighbouring function rather than the one they name, and positional tables where one row is exercised. ${TEST_DISCIPLINE} Severity blocker/major/minor.` },
-      { key: 'robustness', prompt: `Review Phase ${PHASE} of ${REPO} (main) for the no-crash rule, unchecked indexing and casts, unbounded growth, unactionable errors, and any path where a diagnostic reaches the output channel. scripts/gate.sh already threw its inputs; find the one it does not. file:line each. Severity blocker/major/minor. Change no files.` },
-      { key: 'conformance', prompt: `Audit Phase ${PHASE} of ${REPO} (main) against the prime directive and invariants in CLAUDE.md and the plan. For EACH task quote the requirement and state met / partially / unmet with evidence. Where code or prose disagrees with the authority, the authority wins. Severity blocker/major/minor. Change no files.` },
-    ]
+const LENSES = {
+  prototype: [
+    { key: 'combined', prompt: `Review Phase ${PHASE} (prototype) of ${REPO} briefly. Change no files. (1) Does it demonstrate what the phase set out to, end to end? (2) Can any output be a plausible wrong answer instead of a refusal or visible skip? (3) Was harness, edge-case or polish work done that belongs to harnessing (cost)? (4) Is a seam missing that harnessing will need (rewrite risk)? Severity blocker/major/minor.` },
+  ],
+  harnessing: [
+    { key: 'tests', prompt: `Review the tests added in Phase ${PHASE} (harnessing) of ${REPO}. CLAUDE.md "Tests that cannot fail": assume one cannot fail and find it — break the behaviour each important test names and see whether it fails. Look for self-referential fixtures, tests of a neighbouring function, tables where one row is exercised. Is every behaviour rule the phase touches covered? ${TESTS} Severity blocker/major/minor. Change no files.` },
+    { key: 'conformance', prompt: `Audit Phase ${PHASE} (harnessing) of ${REPO} against CLAUDE.md's prime directive and invariants and the plan. For EACH task: quote the requirement, say met / partly / unmet with evidence. Where code or prose disagrees with the authority, the authority wins. Severity blocker/major/minor. Change no files.` },
+  ],
+  production: [
+    { key: 'seams', prompt: `Review Phase ${PHASE} of ${REPO} against CLAUDE.md "Architecture seams": anything forcing a refactor later, types leaking across a seam, platform code outside its seam. Severity blocker/major/minor. Change no files.` },
+    { key: 'tests', prompt: `Review the tests added in Phase ${PHASE} of ${REPO}: assume one cannot fail and find it by mutation. ${TESTS} Severity blocker/major/minor. Change no files.` },
+    { key: 'robustness', prompt: `Review Phase ${PHASE} of ${REPO} for crash paths, unchecked indexing and casts, unbounded growth, unactionable errors, diagnostics reaching the output channel, secrets in logs. file:line each. Severity blocker/major/minor. Change no files.` },
+    { key: 'conformance', prompt: `Audit Phase ${PHASE} of ${REPO} against the prime directive, invariants and plan: each task met / partly / unmet with evidence. Severity blocker/major/minor. Change no files.` },
+  ],
+}[MODE]
 
 phase('Review')
 const reviewed = await parallel(LENSES.map(l => () => agent(l.prompt, { label: `review:${l.key}`, phase: 'Review', schema: REVIEW_SCHEMA, effort: 'high' })))
 const lensesLost = LENSES.filter((_, i) => !reviewed[i]).map(l => l.key)
 let findings = reviewed.filter(Boolean).flatMap(r => r.findings || [])
-
-if (!PROTO) {
-  const critic = await agent(`You are the completeness critic for Phase ${PHASE} of ${REPO}. Findings so far:\n${JSON.stringify(findings, null, 2)}\nPhase test passed: ${phaseTest ? phaseTest.pass : 'unknown'}; its problems: ${JSON.stringify(phaseTest ? phaseTest.problems : [])}\n\nFind what they all MISSED: a requirement nobody verified, a file nobody read, a decision that will bite later, a claim above that is wrong, a check scripts/gate.sh or scripts/task-audit.sh should now make. Check the repository yourself. Report only NEW findings. Severity blocker/major/minor. Change no files.`, { label: 'review:completeness', phase: 'Review', schema: REVIEW_SCHEMA, effort: 'high' })
+if (MODE === 'production') {
+  const critic = await agent(`You are the completeness critic for Phase ${PHASE} of ${REPO}. Findings so far:\n${JSON.stringify(findings, null, 2)}\nComprehensive test passed: ${phaseTest.pass}; problems: ${JSON.stringify(phaseTest.problems)}\nFind what everyone MISSED — a requirement nobody verified, a file nobody read, a decision that will bite, a wrong claim above, a check the scripts should now make. Only NEW findings. Severity blocker/major/minor. Change no files.`, { label: 'review:completeness', phase: 'Review', schema: REVIEW_SCHEMA, effort: 'high' })
   if (!critic) lensesLost.push('completeness')
   findings = findings.concat((critic && critic.findings) || [])
 }
+if (lensesLost.length) return paused('review', `review lens(es) did not report: ${lensesLost.join(', ')} — their findings are unknown, not absent. Re-run them on resume.`)
 const blockers = findings.filter(f => String(f.severity).toLowerCase() === 'blocker')
 
 phase('Triage')
-let backlog = null
+let triage = null
 if (observations.length || findings.length) {
-  backlog = await agent(`Triage what Phase ${PHASE} of ${REPO} turned up but did not act on.
+  triage = await agent(`Triage what Phase ${PHASE} of ${REPO} turned up but did not act on.
 
 Observations (${observations.length}):\n${JSON.stringify(observations, null, 2)}
 Review findings (${findings.length}):\n${JSON.stringify(findings, null, 2)}
 
-1. Check each against the repository NOW; drop what a later task already fixed, and count them.
-2. Drop duplicates, merge near-duplicates.
-3. Survivors that are defects or improvements in what was built: one line each in docs/BACKLOG.md under "## Phase ${PHASE}" — severity, file/symbol, what is wrong, the later task that should settle it.${PROTO ? '\n4. Survivors that are features or hardening outside the prototype\'s question: an entry in docs/OUT_OF_SCOPE.md instead, not the backlog.' : ''}
-Commit once with subject "P${PHASE}: triage the phase review" and the trailer. Fix nothing; change no other file. Return counts: in, dropped as fixed, dropped as duplicate, landed.`, { label: 'triage', phase: 'Triage', effort: 'medium' })
+1. Check each against the repository NOW; drop what is already fixed, and count them. Merge duplicates.
+2. Defects or improvements in what was built → one line each in docs/BACKLOG.md under "## Phase ${PHASE}": severity, file/symbol, what is wrong, the later task that should settle it.
+3. Features or hardening not built → docs/FEATURES.md entries (Disposition: proposed, or mode: harnessing/production for skipped hardening).
+4. Blockers are NOT triaged — list them in your summary; they become remediation tasks.
+Commit once: "P${PHASE}: triage the phase review" with the trailer. Fix nothing else. Return counts: in, dropped as fixed, merged, landed in each file.`, { label: 'triage', phase: 'Triage', effort: 'medium' })
+  if (!triage) return paused('triage', 'the triage agent returned nothing — re-run it on resume')
 }
 
 return {
   phase: PHASE,
-  profile: PROFILE,
-  blocked: null,
+  mode: MODE,
   completed: done,
-  parked,
-  observations,
+  questions,
+  features,
   phaseTest,
   findings,
   blockers,
-  backlog,
-  lensesLost,
-  // A panel with a missing lens has unknown findings, not absent ones.
-  gatePassed: !!(phaseTest && phaseTest.pass) && blockers.length === 0 && lensesLost.length === 0,
+  triage,
+  gatePassed: !!phaseTest.pass && blockers.length === 0,
+  next: phaseTest.pass && blockers.length === 0
+    ? 'Owner: answer open questions and dispose of proposed features (gate skill, step 4), then push.'
+    : 'Blockers become remediation tasks in this phase; prepare and implement them, then re-run the gate.',
 }

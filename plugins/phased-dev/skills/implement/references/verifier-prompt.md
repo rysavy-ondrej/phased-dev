@@ -1,58 +1,58 @@
 # Verifier prompts
 
-Fill the `<...>` parts and pass to an Agent (general-purpose, high effort).
-Do not paste CLAUDE.md into the prompt — the agent reads it.
+Fill the `<...>` parts and pass to an Agent (general-purpose, high effort). Do
+not paste CLAUDE.md — the agent reads it.
 
-## Verify a unit
+## Verify a task (or, in prototype mode, a group)
 
 ```
-Adversarially verify <T2.1, T2.2, T2.3> in <repo>, committed on main. Assume the
-work does NOT meet its specification until the evidence forces the opposite.
+Verify <T2.3 | T1.1, T1.2, T1.3> in <repo>, committed on main. Mode: <prototype |
+harnessing | production> (CLAUDE.md → Modes). Assume the work does NOT meet its
+requirement until the evidence forces the opposite.
 
 ## Read-only
-Do NOT run git checkout, switch, merge, reset, commit, stash or rebase. Inspect
-with git log/show/diff. Revert any scratch edit and confirm `git status
+Do NOT run git checkout, switch, merge, reset, commit, stash or rebase, and do
+not edit files except for scratch mutations you revert. Confirm `git status
 --porcelain` is empty before finishing.
 
 ## First, the mechanical audit
 scripts/task-audit.sh <each id>
-Every FAIL line is a problem, copied verbatim with its task id. Do not re-check
-by hand what the script checks.
+Every FAIL line is a problem. Do not re-check by hand what it checks.
 
-## The specifications
-<each task's requirement, quoted verbatim from the plan, and its small-scale test>
+## The requirement
+<each task's line from the plan, verbatim, with its small test>
 
 ## What the implementer reported
-<summary; per task, the assertion the claim rests on>
+<summary; assumptions made on open questions; features recorded>
 
 ## What to check
-- Every requirement genuinely implemented, or stubbed, partial, quietly narrowed?
-  Quote the requirement, then the code.
-- CLAUDE.md "Tests that cannot fail" is binding.
-  [production] For every test: could it pass if the behaviour were broken? Prove
-  it: break the implementation at the exact construct the test names, run that
-  one test, watch it fail, revert.
-  [prototype] For each task, the ONE assertion its claim rests on: break the
-  implementation behind it, run that test, watch it fail, revert. A central claim
-  that survives mutation is a defect.
-  Check fixtures for the self-referential shape.
-- Run the real program on the real data. Hunt for an input giving a wrong result.
-- Does prose the work added (help, doc comments, docs/*.md) claim something the
-  code does not do?
-- Between tasks of a batch: a helper one added that another works around; a
-  requirement each assumed the other covered.
-- [prototype] Anything parked in docs/OUT_OF_SCOPE.md that the requirement asks
-  for is scope reduction — a problem. Input reaching a parked feature must be
-  refused or visibly skipped, never a plausible wrong result.
+- Is the requirement met, or stubbed, partial, quietly narrowed? Quote it, then
+  the code.
+- Run the real program on real (sample) data and look for a wrong result.
+- Unhandled input: refused or visibly skipped — never a plausible wrong result.
+- Prose the task added (help, doc comments, docs) matches the behaviour.
+[prototype]
+- The demonstration test really exercises the behaviour: break the behaviour,
+  run that test, watch it fail, revert. One mutation per task is enough.
+- Do NOT ask for edge cases, harness or polish — that is harnessing work. Put
+  such remarks in observations, not problems.
+[harnessing | production]
+- Every new test can fail: break the implementation at the exact construct each
+  test names, run that test, watch it fail, revert. Check fixtures for the
+  self-referential shape (input built from the constant under test).
+- Edge and malformed inputs the requirement names are handled and tested.
+[production]
+- Hostile input: find one the tests do not throw.
 
-## Running tests
-Targeted tests for mutation proof; the whole suite once at the end.
+Run only the tests you mutate; the full suite once at the end.
 
 ## Output
-pass: false ONLY for a reproduced defect.
-problems: each with task id, file:line and the reproducing command.
-observations: judgement calls — they do NOT fail the unit; written to make sense
-to someone who never saw this task.
+pass: false ONLY for a defect you reproduced.
+problems: each with task id, file:line, the reproducing command, and
+  suggested_repair — the change you would make, concretely.
+observations: judgement calls; they do NOT fail the task. Write each so it makes
+  sense to someone who never saw this task.
+questions: anything the requirement leaves ambiguous (becomes a Q-n).
 evidence: what you ran and what it printed.
 ```
 
@@ -63,7 +63,7 @@ evidence: what you ran and what it printed.
 Assume it did not. [Read-only section as above.]
 
 The problems it was supposed to fix:
-<numbered list>
+<numbered list with the suggested repairs>
 
 1. scripts/task-audit.sh for each id; every FAIL is a problem.
 2. For EACH problem: reproduce the original failure against the code now. It
@@ -71,5 +71,5 @@ The problems it was supposed to fix:
    an assertion is not fixed.
 3. For each: break the fix, run the covering test, watch it fail, revert.
 4. Read the repair diff only; judge whether it broke a neighbour.
-Do NOT re-derive the whole unit. Same output format.
+Do NOT re-verify the whole task. Same output format.
 ```

@@ -7,6 +7,7 @@
 #
 # Exit 0 = clean. 1 = at least one deviation. 2 = cannot run.
 set -u
+export LC_ALL=C   # comm and sort must agree on one collation
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root" || exit 2
 # shellcheck source=method.conf
@@ -66,17 +67,19 @@ else
     ok "no $REMOTE/$MAIN yet (nothing pushed)"
 fi
 
-# Every box newly ticked in this range must belong to a task with a commit here.
-ticked_at() { git show "$1:$PLAN" 2>/dev/null | grep -oE "☑ \*\*${ID_RE}" | grep -oE "$ID_RE" | sort -u; }
-newly=$(comm -13 <(ticked_at "$base") <(ticked_at "$tip"))
+# Plan markers: ☐ not started, ◐ committed and unverified, ☑ verified. Only a
+# task's own commits may change its marker, and this task must be ◐ or ☑.
+markers_at() { git show "$1:$PLAN" 2>/dev/null | grep -oE "(☐|◐|☑) \*\*${ID_RE}" | sed -E 's/ \*\*/ /' | sort; }
+changed=$(comm -13 <(markers_at "$base") <(markers_at "$tip") | awk '{print $2}' | sort -u)
 worked_on=$(git log --format='%s' "$base".."$tip" | sed 's/:.*//' | tr ',' '\n' | grep -oE "$ID_RE" | sort -u)
-if ! printf '%s\n' "$newly" | grep -qx "$task"; then
-    bad "the plan does not newly mark $task done"
-else
-    unvouched=$(comm -23 <(printf '%s\n' "$newly") <(printf '%s\n' "$worked_on"))
-    if [ -z "$unvouched" ]; then ok "the plan marks $task done, and only tasks with commits here"
-    else bad "the plan newly marks $(echo "$unvouched" | tr '\n' ' ')with no commit doing that work"; fi
-fi
+state=$(markers_at "$tip" | awk -v t="$task" '$2 == t {print $1}')
+case "$state" in
+    ◐|☑) ok "the plan marks $task $state" ;;
+    *)   bad "the plan does not mark $task ◐ (committed) or ☑ (verified) -- found '${state:-nothing}'" ;;
+esac
+unvouched=$(comm -23 <(printf '%s\n' "$changed" | grep . ) <(printf '%s\n' "$worked_on"))
+if [ -z "$unvouched" ]; then ok "every marker changed here belongs to a task with a commit here"
+else bad "markers changed for $(echo "$unvouched" | tr '\n' ' ')with no commit doing that work"; fi
 
 # Green, once each. Determinism re-runs belong to the gate.
 for cmd in "${CHECKS[@]}"; do

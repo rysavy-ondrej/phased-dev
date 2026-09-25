@@ -1,72 +1,74 @@
 ---
 name: method
-description: Overview of the phased-dev method — the lifecycle from concept to documented release, the two profiles (production and prototype), and which phased-dev skill to use at each step. Use when starting a new project with this method, when unsure which step comes next, or when asked how the method works.
+description: Overview of the phased-dev method — from the owner's concept notes through the specification and the implementation plan to phased implementation in three project modes (prototype, harnessing, production), and which phased-dev skill to use at each step. Use when starting a project with this method, when unsure what comes next, or when asked how the method works.
 ---
 
 # The phased-dev method
 
-A way of building software with agents that stays honest under scale: one
-constitution every agent reads (`CLAUDE.md`), a plan of phases with runnable exit
-criteria, one commit per unit of work, independent verification, mechanical
-checks as scripts, and registers that make every known gap visible.
+Software built with agents, from a human's concept notes to a product, in a way
+that stays honest and affordable: one constitution every agent reads
+(`CLAUDE.md`), a spec derived from the concept, a plan of phases with runnable
+exit criteria, one commit per task, an independent verifier, mechanical checks
+as scripts, all state in git, and registers that keep every open question and
+new idea visible.
 
-It was extracted from a project (maestro-enjoy, a from-scratch reimplementation
-held to output parity with a reference) where each rule was bought by a measured
-failure. `references/lessons.md` has the evidence; read it when a rule seems
-excessive before relaxing it.
+Extracted from maestro-enjoy, where every rule was bought by a measured failure —
+`references/lessons.md` has the evidence. Read it before relaxing a rule.
 
-## Lifecycle
+## The flow
 
-| Step | Skill | Produces | Done when |
+```
+CONCEPT.md ──start──▶ questions ──specify──▶ SPEC.md ──plan──▶ IMPLEMENTATION_PLAN.md
+ (owner)                (owner answers)       (owner confirms)   (mode allocation, phases)
+                                                                          │
+      ┌──────────────────── for each phase 1..N ───────────────────────────┘
+      ▼
+ prepare-phase ──▶ implement (task → commit → verify → ☑, per task) ──▶ gate ──▶ push
+      ▲                 │  questions → question    new features → feature
+      │                 │  rate limit → pause ─── resume ──┘
+      └── next phase ◀──┘                         status: anytime
+```
+
+| Step | Skill | Input → output | Done when |
 | --- | --- | --- | --- |
-| 1. Conceive | `conceive` | `docs/CONCEPT.md`, profile choice, scaffolded repo | purpose, authority, priorities, in/out scope and (prototype) *the question* are written and the owner agrees |
-| 2. Specify | `specify` | `CLAUDE.md` invariants, seams, output contract; `docs/PROVENANCE.md`, `docs/TEST_DATA.md` | every invariant cites the authority; test data is located or listed as missing |
-| 3. Plan | `plan` | `docs/IMPLEMENTATION_PLAN.md` with phases, tasks, exit criteria, (prototype) batches, settled decisions | each phase has a runnable exit criterion and a readiness section |
-| 4. Implement | `implement` | commits on `main`, one per task or batch, each audited and independently verified | `scripts/task-audit.sh` is clean and the verifier passed |
-| 5. Gate | `gate` | `scripts/gate.sh <n>` green, review findings triaged, `docs/STATUS.md` updated, push | the exit criterion passes on real data, no blocker |
-| 6. Document | `registers` | STATUS, BACKLOG, DIVERGENCES, UNVALIDATED, OUT_OF_SCOPE, history | continuous — every step writes to them |
-| any time | `park` | an `OOS-n` entry | a feature outside the question was recorded instead of built or dropped |
+| 1 | `start` | owner's `docs/CONCEPT.md` → scaffolded repo, gaps as `Q-n` questions | the owner has answered the concept questions |
+| 2 | `specify` | concept + answers → `docs/SPEC.md` (architecture, languages, frameworks, allowed libraries, interfaces, behaviour), `CLAUDE.md` filled | every `spec` question answered; owner confirms the spec |
+| 3 | `plan` | spec → `docs/IMPLEMENTATION_PLAN.md`: **mode allocation**, phases 1..N, subphases, tasks | owner confirms which work goes in which mode |
+| 4 | `prepare-phase` | a phase → fixed task order, dependencies, groups, answered questions, gate script | `Prepared: <date>` in the plan |
+| 5 | `implement` | prepared phase → one commit per task, each verified (☐ → ◐ → ☑) | every task ☑ |
+| 6 | `gate` | finished phase → comprehensive tests, review, triage, STATUS, **push** | gate passes, push done |
+| any | `status` | → where the implementation is, open questions, what is next | |
+| any | `question` | a question that came up → `Q-n` | answered before the next phase is prepared |
+| any | `feature` | a new requirement that came up → `F-n` with a disposition | owner rules at triage: later phase, future cycle, or rejected |
+| any | `resume` | after a pause (usage/rate limit, interruption) → continues from git state | |
+| any | `registers` | which document a gap belongs in | |
 
-Steps 4–5 repeat per phase. Steps 1–3 are revisited when a phase finds that an
-assumption was wrong — the plan is edited in the open (a new task, a settled
-decision), never worked around.
+Steps 4–6 repeat for each phase.
 
-## Profiles
+## The three modes are stages of the project
 
-Chosen at *Conceive*, recorded in `CLAUDE.md` and `scripts/method.conf`.
-Full comparison: `references/profiles.md`.
+The `plan` skill allocates each part of the spec to the mode it is built in:
 
-- **production** — the output is trusted by others. Per-task (or planned-group)
-  adversarial verification with mutation proof of every test, hostile-input
-  testing and fuzzing, a four-lens review panel plus a completeness critic at
-  each gate.
-- **prototype** — the project exists to answer a question. Three adjustments:
-  1. **Harness proportional to the question.** Test every claim the answer rests
-     on; skip fuzzing, malformed-input suites, polish, portability. Each skipped
-     item is one line under *Deferred hardening*.
-  2. **Token-conservative, batch-first.** Before implementation, each phase is cut
-     into batches of tasks that share context and are verified together. One
-     batch → one implementer → one commit → one verifier → at most one repair.
-     One combined review per phase instead of a panel.
-  3. **Out-of-scope register.** Features that appear during specification or
-     development and do not serve the question are parked in
-     `docs/OUT_OF_SCOPE.md` — not built, not silently dropped — and the code
-     refuses them visibly if input reaches them.
+1. **Prototype** — demonstrate the functionality end to end, **quickly and
+   cheaply**. The main path on expected input, no harness, no edge cases, no
+   polish. Unhandled input is refused or visibly skipped, never turned into a
+   wrong answer, and every skipped hardening item is recorded for later.
+2. **Harnessing** — make the prototype trustworthy: test harness, conformance
+   with the authority, edge cases, error handling, shortcuts removed.
+3. **Production** — complete the product: the remaining features, robustness,
+   performance, packaging, CI, documentation.
 
-  What a prototype never relaxes: the prime directive, never lying in the output,
-  no hollow test for a claim that is made, and *failure is a stop*.
-
-**Graduation** (prototype → production) is a phase of its own, planned with the
-`plan` skill: switch the profile, turn *Deferred hardening* into tasks, rule on
-every parked entry, close or re-justify every `UNVALIDATED.md` entry.
+The mode sets test depth, verification strength and review size
+(`references/modes.md`). It never relaxes: honesty of the output, tests that can
+fail, one commit per task, failure is a stop.
 
 ## Rules that hold in every step
 
-- `CLAUDE.md` is the single home of a rule. Prompts and skills name the rule;
-  they do not restate it (a restatement is a second, weaker source).
-- The authority wins over prose and judgement. Disagreement is filed, not fixed
-  silently.
-- Anything mechanical is a script. Anything needing judgement is an agent.
+- The owner writes the concept and answers questions; agents derive, propose and
+  ask. Owner decisions are dated.
+- `CLAUDE.md` is the single home of a rule; skills and prompts name it.
+- The authority wins over prose and judgement.
+- Commit after every task, push after every phase.
+- Anything mechanical is a script (`task-audit.sh`, `gate.sh`, `progress.sh`).
+- All state is in git, so any step can pause and resume.
 - Failure is a stop: report the exact output and the likely cause.
-- Owner decisions are dated rulings in the plan's *Settled decisions*, with the
-  measurement behind them.

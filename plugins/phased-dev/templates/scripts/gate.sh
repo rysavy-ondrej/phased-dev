@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
-# The phase-independent half of the phase gate. The agent running the gate spends
-# its judgement on the phase's own exit criterion and on whether DIVERGENCES.md is
-# still literally true; everything mechanical is here, where it does not drift.
+# The phase-independent half of the comprehensive phase test. The agent running
+# the gate spends its judgement on the phase's own exit criterion; everything
+# mechanical is here, where it does not drift.
 #
-#   scripts/gate.sh <phase>[<part-letter>]    e.g. 2, or 2A
+#   scripts/gate.sh <phase>[<subphase>]    e.g. 2 (before the push), or 2A (checkpoint)
 #
 # Exit 0 = passes. 1 = does not. 2 = cannot run.
 set -u
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root" || exit 2
 . "$root/scripts/method.conf" || exit 2
+# Registers carry example entries inside <!-- --> blocks; never count those.
+uncomment() { awk '/<!--/ {c=1} !c; /-->/ {c=0}' "$1" 2>/dev/null; }
 
 arg=${1:-}
-[ -n "$arg" ] || { echo "usage: scripts/gate.sh <phase>[<part>]" >&2; exit 2; }
-phase=${arg%%[A-Za-z]*}; part=${arg#"$phase"}
+[ -n "$arg" ] || { echo "usage: scripts/gate.sh <phase>[<subphase>]" >&2; exit 2; }
+phase=${arg%%[A-Za-z]*}; sub=${arg#"$phase"}
 
 fail=0; checked=0
 ok()  { checked=$((checked + 1)); printf 'ok    %s\n' "$1"; }
@@ -22,9 +24,9 @@ out() { printf '%s\n' "$1" | tail -20 | sed 's/^/      /'; }
 
 # A full scratch disk fails checks for reasons that are not the code's.
 avail=$(df -Pk "${TMPDIR:-/tmp}" | awk 'NR==2 {print $4}')
-if [ "${avail:-0}" -lt 1048576 ]; then bad "less than 1 GB free in ${TMPDIR:-/tmp} -- clear agent scratch before gating"; fi
+[ "${avail:-0}" -ge 1048576 ] || bad "less than 1 GB free in ${TMPDIR:-/tmp} -- clear agent scratch before gating"
 
-# 1. Green, small-scale and gate-only commands.
+# 1. Green.
 for cmd in "${CHECKS[@]}" "${GATE_CHECKS[@]}"; do
     if o=$(bash -c "$cmd" 2>&1); then ok "$cmd"; else bad "$cmd"; out "$o"; fi
 done
@@ -38,32 +40,40 @@ if [ -n "${DETERMINISM_CMD:-}" ]; then
     else bad "suite not deterministic over three runs"; out "$(printf '1:\n%s\n2:\n%s\n3:\n%s' "$a" "$b" "$c")"; fi
 fi
 
-# 3. This phase's boxes all ticked; no later phase's box ticked.
-section() { awk -v h="$1" '$0 ~ "^## Phase "h" " {on=1; next} /^## / {on=0} on' "$PLAN"; }
-if [ -n "$part" ]; then
-    body=$(awk -v h="$phase$part" '$0 ~ "^### Part "h" " {on=1; next} /^##/ {on=0} on' "$PLAN")
-else
-    body=$(section "$phase")
-fi
+# 3. Every task of this phase (or subphase) verified; nothing later started.
+#    Headings: "# Prototype" (mode), "## Phase 2 — ...", "### Subphase 2A — ...".
+body=$(awk -v p="$phase" -v s="$sub" '
+    /^# / { on=0 }
+    /^## Phase [0-9]+/ { split($3, a, /[^0-9]/); inph = (a[1] == p); on = inph && s == ""; next }
+    /^### Subphase / { if (inph && s != "") on = ($3 == p s); next }
+    /^## / { on=0 }
+    on' "$PLAN")
 if [ -z "$body" ]; then bad "no section for phase $arg in $PLAN"
 else
-    open=$(printf '%s\n' "$body" | grep -oE "☐ \*\*${ID_RE}" | grep -oE "$ID_RE" | tr '\n' ' ')
-    if [ -z "$open" ]; then ok "every task of phase $arg is ticked"; else bad "phase $arg has unticked tasks: $open"; fi
+    grep -q '^Prepared: [0-9]' < <(awk -v p="$phase" '/^## Phase [0-9]+/ {split($3,a,/[^0-9]/); on=(a[1]==p)} /^### Subphase/ {on=0} on' "$PLAN") \
+        && ok "phase $phase is prepared" || bad "phase $phase has no 'Prepared: <date>' -- it was never prepared"
+    open=$(printf '%s\n' "$body" | grep -oE "(☐|◐) \*\*${ID_RE}" | tr '\n' ' ')
+    if [ -z "$open" ]; then ok "every task of $arg is verified (☑)"; else bad "$arg has tasks not verified: $open"; fi
 fi
-later=$(awk -v p="$phase" '/^## Phase [0-9]+/ {split($3,a,/[^0-9]/); on=(a[1]+0 > p+0)} on' "$PLAN" | grep -oE "☑ \*\*${ID_RE}" | grep -oE "$ID_RE" | tr '\n' ' ')
-if [ -z "$later" ]; then ok "no later phase has a ticked box"; else bad "later-phase tasks ticked early: $later"; fi
+later=$(awk -v p="$phase" '/^## Phase [0-9]+/ {split($3,a,/[^0-9]/); on=(a[1]+0 > p+0)} on' "$PLAN" | grep -oE "(◐|☑) \*\*${ID_RE}" | tr '\n' ' ')
+if [ -z "$later" ]; then ok "no later phase has started"; else bad "later-phase tasks already started: $later"; fi
 
-# 4. Project-wide invariant checks: add them here as the project grows. Each one
-#    must be proven to bite (break the thing, watch the FAIL) before it lands.
-#    Examples: output channel carries nothing but results under -v/--debug; two
-#    runs over one input produce identical bytes; hostile inputs cause no crash.
+# 4. No open question blocks the next step.
+blocking=$(awk '/^## Open/ {on=1; next} /^## / {on=0} on' <(uncomment docs/QUESTIONS.md) | grep -c '\*\*Blocking:\*\* yes' || true)
+[ "${blocking:-0}" -eq 0 ] && ok "no open blocking question" || bad "$blocking open blocking question(s) in docs/QUESTIONS.md"
 
-# 5. The phase's own exit criterion, as a script.
-pg="$root/scripts/phase${arg}-gate.sh"
-if [ -x "$pg" ]; then
-    if o=$("$pg" 2>&1); then ok "scripts/phase${arg}-gate.sh"; out "$o"; else bad "scripts/phase${arg}-gate.sh"; out "$o"; fi
-else
-    bad "no executable scripts/phase${arg}-gate.sh -- the exit criterion must be runnable, not narrated"
+# 5. Project-wide invariant checks: add them here as the project grows, each one
+#    proven to bite before it lands (output channel clean under -v, identical
+#    bytes across two runs, no crash on hostile input, ...).
+
+# 6. The phase's own exit criterion, as a script (phase only, not a subphase checkpoint).
+if [ -z "$sub" ]; then
+    pg="$root/scripts/phase${phase}-gate.sh"
+    if [ -x "$pg" ]; then
+        if o=$("$pg" 2>&1); then ok "scripts/phase${phase}-gate.sh"; out "$o"; else bad "scripts/phase${phase}-gate.sh"; out "$o"; fi
+    else
+        bad "no executable scripts/phase${phase}-gate.sh -- the exit criterion must be runnable, not narrated"
+    fi
 fi
 
 echo "gate: $checked checks, $fail failure(s)"

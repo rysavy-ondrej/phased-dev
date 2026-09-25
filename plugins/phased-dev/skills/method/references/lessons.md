@@ -16,7 +16,7 @@ parity with the reference). Relax a rule only knowing what it was bought with.
 | 147 observations were collected in a phase and never triaged. | Observations go to `BACKLOG.md` or are not requested. |
 | Phases 1 and 2 cost four and three gate rounds for being too broad. | Wide phases are split into parts (3A/3B/3C), each gated on its own. |
 | Runs rediscovered prerequisites (missing library target, undocumented dependency, unused fixtures). | A readiness section per phase, written before the run. |
-| Grouped verification (implement several tasks, verify once) saved real tokens, and the review panel still caught what slipped. | Batching is sound — the prototype profile makes it the default and plans it up front. |
+| Grouped verification (implement several tasks, verify once) saved real tokens, and the review panel still caught what slipped. | Grouping is sound — prepare-phase plans the groups up front, and prototype mode verifies a whole group at once. |
 
 ## Hollow tests
 
@@ -52,3 +52,9 @@ parity with the reference). Relax a rule only knowing what it was bought with.
 
 - `/tmp` filled to 100% with ~7.6 GB of subagent scratch and the gate failed on
   it. `gate.sh` checks free space first.
+
+## Pausing
+
+- Phase-1 review lenses died on a session limit and four of five never reported;
+  the phase was pushed with an incomplete panel. A dead agent is recorded as
+  missing, never as clean, and a limit is a pause to resume from, not a result.

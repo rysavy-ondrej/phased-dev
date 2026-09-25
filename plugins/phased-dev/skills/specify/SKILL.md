@@ -1,88 +1,75 @@
 ---
 name: specify
-description: Step 2 of the phased-dev method — extract the observable contract from the authority into CLAUDE.md (invariants a sensible design gets wrong, architecture seams, output contract, code non-negotiables) and locate the test data (PROVENANCE, TEST_DATA). Use after conceive, or when a project needs its specification written or corrected.
+description: Step 2 of the phased-dev method — derive docs/SPEC.md from the owner's concept and answered questions: architecture and components, languages, frameworks, allowed libraries, interfaces, precise behaviour, quality targets per mode, and decisions; fill CLAUDE.md's invariants, technology constraints and seams; locate test data. Every spec question must be answered and the owner must confirm the spec. Use after start, or when the spec needs writing or revising.
 ---
 
 # Specify
 
-Goal: `CLAUDE.md` holds everything an implementer must not get wrong, each item
-traceable to the authority; the test data is located, its provenance written.
+The spec adds what the concept leaves open — **how** it will be built — and
+must not contradict the concept. Read `docs/CONCEPT.md`, `docs/QUESTIONS.md`
+(answered and open) and the authority, if there is one.
 
-Read `docs/CONCEPT.md` first. If the profile is prototype, keep *the question* in
-view the whole time: specify what the question needs, and park the rest.
+## 1. Read the authority for the contract
 
-## 1. Read the authority — for the contract, not the design
+If there is a reference implementation, standard or golden output, copy it into
+the repo (`docs/reference/`), mark it protected in `scripts/method.conf`
+(`PROTECTED_RE`), and read it for the **observable contract**: inputs, outputs,
+and every rule that decides the output. Do not plan to port it line by line. For
+a large authority, fan the reading out to Explore agents by area, each returning
+rules with file:line citations.
 
-Copy the authority into the repo if it is not there (`docs/reference/`), and
-mark that path protected in `scripts/method.conf` (`PROTECTED_RE`). Then read it
-to extract the **observable contract**: what goes in, what comes out, and every
-rule that decides the output. Do not plan to port it line by line; the authority
-is the spec, not the design.
+## 2. Draft `docs/SPEC.md`
 
-For a large authority, fan the reading out to Explore agents by area, each
-returning rules with file:line citations — not summaries.
+Work through its sections, proposing a choice wherever the concept is silent and
+giving the reason:
 
-## 2. Write the invariants
+1. **Scope** — from the concept; later-cycle wishes become `F-n` entries
+   (`feature` skill, disposition `future cycle`).
+2. **Architecture** — components, data flow, and the **seams** (one interface per
+   axis of change). Define the seams the product will need even if the prototype
+   has one implementation behind each: a seam is cheap now and a rewrite later.
+3. **Technology** — language(s), frameworks, build, targets, test tooling.
+4. **Allowed libraries** — each with version, purpose, where it may be used,
+   licence. This list is closed: nothing else gets used without an answered
+   question. Prefer few, well-maintained libraries; say why each beats writing it.
+5. **Interfaces** — CLI/API, formats, with examples.
+6. **Behaviour** — rules precise enough to write a test from, each citing the
+   authority. Verify each against real output where outputs exist; an unobserved
+   rule is a hypothesis and is marked so.
+7. **Quality targets per mode** — what counts as evidence of correctness,
+   performance and robustness in prototype, harnessing and production.
+8. **Decisions** — every choice someone may reopen, with the reason.
 
-In `CLAUDE.md` → *Invariants*, list the rules a **sensible from-scratch design
-gets wrong by default**. Not every rule — the ones where good instincts lead
-astray: an id that survives a reset, a direction chosen by a quirky comparison, a
-counter taken from an unexpected field, a number formatted with a specific
-printf, key order that must be preserved, a time source that is data time and
-not wall time. Each one:
+## 3. Ask, do not assume
 
-- states the rule precisely enough to write a test from,
-- cites the authority (file:line),
-- says what goes wrong if the "better" design is used.
+Every choice the owner might reasonably make differently — language, framework,
+a library, an architectural trade-off, a scope boundary — is a `Q-n` tagged
+`Affects: spec`, with options and a recommendation. Ask them in one round
+(AskUserQuestion). The spec is **not final while any `spec` question is open**;
+answers go into the spec's text and *Decisions* table with the date.
 
-Where the authority is non-deterministic or buggy, say so, and say what we emit
-instead (it becomes a `DIVERGENCES.md` entry). Where our design intentionally
-extends the authority, say which part of the comparison is gated and which is
-reported as an extension.
+## 4. Fill `CLAUDE.md`
 
-**Verify each invariant against the goldens**, not only the source. An invariant
-you could not observe in real output is a hypothesis; mark it so.
-
-## 3. Architecture seams
-
-Identify the axes of change (where input comes from, which formats/protocols are
-understood, how output is serialised, where it is delivered…). One interface per
-axis, in the *Architecture seams* table, with the rule that adding to one never
-touches another. Keep platform-specific code behind one seam.
-
-Prototype: define the seams the graduated product will need, even if only one
-implementation exists behind each. A seam is cheap now and a rewrite later; this
-is what lets parked features plug in without restructuring.
-
-## 4. Output contract and non-negotiables
-
-- *The output contract*: what the output channel may carry, and nothing else;
-  which terminal modes are exempt.
-- *Non-negotiables*: never crash on input, never lie in the output, and the
-  language-specific rules (error types, panics, unsafe, allocation policy).
-  Prototype keeps "never crash" to *never crash silently or with a wrong result*;
-  robustness beyond that is *Deferred hardening*.
+- *Invariants*: the behaviour rules a sensible design gets **wrong by default**
+  (an id that survives a reset, a quirky direction rule, a counter from an
+  unexpected field, exact number formatting, preserved key order, data time vs
+  wall time) — each with its citation and what breaks if "improved".
+- *Technology constraints*, *Architecture seams*, *The output contract*, the
+  language-specific *Non-negotiables*, *Conventions*.
+- `scripts/method.conf`: the real `CHECKS` (format, lint, test), `GATE_CHECKS`,
+  and the determinism command for the chosen toolchain.
 
 ## 5. Test data
 
-Fill `docs/PROVENANCE.md` — every set: path, origin, the tool and **version**
-that produced it, how to regenerate it, whether it is in git — and
-`docs/TEST_DATA.md` with what is still missing and which phase needs it. If data
-cannot be committed, write a fetch script for what is public and say where the
-rest comes from.
+`docs/PROVENANCE.md`: every data set — path, origin, the tool **and version** that
+produced it, how to regenerate it, whether it is in git. `docs/TEST_DATA.md`:
+what is missing and which mode needs it (the prototype usually needs only a
+small sample; harnessing needs the full comparison set). Check goldens for
+staleness and record known defects.
 
-Check goldens for staleness (schema drift, fields the current authority no longer
-writes). Record known defects in PROVENANCE with which set is the authority for
-which field instead.
+## 6. Confirm
 
-## 6. Parked during specification (prototype)
-
-Reading an authority always surfaces features the question does not need. Each
-one: invoke the `park` skill (or write the `OOS-n` entry directly) and move on.
-Do not write invariants for parked features.
-
-## 7. Review
-
-Before `plan`: every `{{placeholder}}` in `CLAUDE.md` is filled
-(`grep -n '{{' CLAUDE.md`), and the owner has seen the invariants list — it is the
-part of the specification most expensive to get wrong.
+`grep -n '{{' CLAUDE.md docs/SPEC.md` returns nothing that the spec needs. Show
+the owner the architecture, the technology and library choices and the
+invariants, and get confirmation; mark the spec `confirmed by owner on <date>`.
+Then `plan`.

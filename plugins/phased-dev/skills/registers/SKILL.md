@@ -1,6 +1,6 @@
 ---
 name: registers
-description: Maintain the phased-dev documentation registers — STATUS, BACKLOG, DIVERGENCES, UNVALIDATED, OUT_OF_SCOPE, PROVENANCE, TEST_DATA and phase history — deciding which register a gap belongs in and keeping every claim true. Use when recording a known difference, an unchecked feature, a deferred defect, project status, or test-data provenance, or when unsure which document something belongs in.
+description: Maintain the phased-dev documentation registers — STATUS, QUESTIONS, FEATURES, BACKLOG, DIVERGENCES, UNVALIDATED, PROVENANCE, TEST_DATA and phase history — deciding which register a gap belongs in and keeping every claim true. Use when recording a known difference, an unchecked feature, a deferred defect, project status, or test-data provenance, or when unsure which document something belongs in.
 ---
 
 # Registers
@@ -13,19 +13,21 @@ project's `docs/` (scaffolded) or `<skill-dir>/../../templates/docs/`.
 
 | The situation | Register | Meaning |
 | --- | --- | --- |
+| Something about what to build is undecided | `QUESTIONS.md` | a decision the owner owes |
+| A new requirement, or work a mode deliberately skipped | `FEATURES.md` | not built yet, with a disposition |
+| We built it and it has a defect or could be better, not blocking | `BACKLOG.md` | deferred work |
 | We built it and it differs from the authority on purpose | `DIVERGENCES.md` | a decision, measured |
 | We built it and nobody has checked it against anything | `UNVALIDATED.md` | an open question; leaves only |
-| We built it and it has a defect or could be better, not blocking | `BACKLOG.md` | deferred work |
-| We did not build it, on purpose (prototype) | `OUT_OF_SCOPE.md` | parked feature or deferred hardening |
 | Test data: where it came from, how to regenerate | `PROVENANCE.md` | |
 | Test data we need and do not have | `TEST_DATA.md` | |
-| Where the project is now | `STATUS.md` | present tense only |
+| Where the project is now; the current run; pauses | `STATUS.md` | present tense only |
 | How it got here | `docs/history/phase-N.md` | moved whole when a phase closes |
-| A choice someone may reopen | plan → *Settled decisions* | dated, with the measurement |
+| A choice someone may reopen | `SPEC.md` → *Decisions* | dated, with the measurement |
 
-Moves are one-directional: UNVALIDATED → DIVERGENCES or closed; BACKLOG →
-closed or DIVERGENCES; OUT_OF_SCOPE → promoted to a task (by owner ruling) or
-rejected. Never the reverse.
+Moves are one-directional: QUESTIONS open → answered; FEATURES proposed →
+planned / later mode / future cycle / rejected; UNVALIDATED → DIVERGENCES or
+closed; BACKLOG → closed or DIVERGENCES. Never the reverse. Ids are never reused
+in any register.
 
 ## Rules per register
 
@@ -46,11 +48,17 @@ symbol (line numbers drift), what is wrong, the plan task that should settle it.
 Closed items are listed with the commit/task that closed them and the test that
 holds them closed.
 
-**OUT_OF_SCOPE** — see the `park` skill. Two sections: *Parked features*
-(`OOS-n`) and *Deferred hardening*.
+**QUESTIONS** — see the `question` skill. Every open question is answered before
+the phase it affects is prepared; blocking ones stop the task at once.
 
-**STATUS** — updated in the commit that changes what is true. One row per phase:
-state, what is established with numbers, what is not. Never quote a number that
+**FEATURES** — see the `feature` skill. Dispositions are the owner's, given at
+the phase gate.
+
+**STATUS** — updated in the commit that changes what is true: the current mode;
+*Current run* (phase, paused or not and why, next step on resume, blocked on);
+one row per phase: state, what is established with numbers, what is not. Task
+state itself lives in the plan's markers — `scripts/progress.sh` reads it, so
+STATUS does not duplicate it. Never quote a number that
 must be re-derived on every commit (e.g. "N commits unpushed"): name the fixed
 base and let git compute it. If a gate did not pass and the work was pushed
 anyway, say so here, plainly.

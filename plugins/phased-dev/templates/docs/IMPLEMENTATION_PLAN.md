@@ -1,48 +1,84 @@
 # Implementation plan
 
-Tasks are executed **in order**, committed straight onto `main`. Each
-{{UNIT}} is one commit, green, with its small-scale test passing. Nothing is
-pushed mid-phase. Each phase ends with a runnable program and a full-scale test
-of its exit criterion (`scripts/gate.sh <n>`); `main` is pushed only after that
-passes. A task that cannot be completed stops the run and is reported.
+Derived from `SPEC.md`. The project passes through three modes — **prototype**,
+**harnessing**, **production** (`CLAUDE.md` → *Modes*). Each mode holds phases,
+numbered 1..N across the whole plan; a phase may be split into subphases A, B,
+C. Every phase ends with a runnable program, a comprehensive test
+(`scripts/gate.sh <n>`) and a push.
 
-Legend: ☐ not started · ☑ done. A box is ticked by the commit that does the work,
-and by no other.
+Task markers: ☐ not started · ◐ committed, not yet verified · ☑ verified.
+Each task is one commit; only a task's own commits change its marker.
+
+## Mode allocation
+
+Proposed by the `plan` skill, confirmed by the owner. Every spec item appears
+once per mode it is touched in.
+
+| Spec item | Prototype (demonstrate) | Harnessing (make trustworthy) | Production (complete) |
+| --- | --- | --- | --- |
+| {{§6.1 parse input format}} | typical files only | truncated/malformed files, conformance vs authority | fuzz target, large-file performance |
+| {{§5 CLI}} | the flags the demo needs | full validation, exit codes | help text, shell completion |
+| {{secondary feature X}} | — | — | full |
+
+Prototype exit: {{the end-to-end demonstration that ends the prototype — a
+command on sample data and what it shows}}.
 
 ---
 
-## Phase 0 — Skeleton
+# Prototype
 
-Goal: {{the shell of the final program — its interface, configuration and error
-handling — so later phases only add capability, never restructure.}}
+Detailed now. The later modes are outlined and detailed when the prototype has
+shown what they need.
 
-### Readiness, checked {{date}} before the run
+## Phase 1 — {{Title}}
 
-Found once, so the run does not rediscover it: fixtures that exist for this
-phase, dependencies it needs, owner decisions it is waiting on, surface that
-already exists.
+Goal: {{one sentence}}.
 
-1. {{finding}}
+**Phase exit:** {{a command and what it must produce. Graded by
+`scripts/phase1-gate.sh`.}}
 
-<!-- profile:prototype -->
-### Batches
+### Preparation
 
-| Batch | Tasks | Shared context | Verified together by | Size |
+Written by the `prepare-phase` skill before any code; its absence means the
+phase is not ready.
+
+Prepared: {{date}}
+
+| # | Task | Depends on | Implementation group | Why here |
 | --- | --- | --- | --- | --- |
-| B0.1 | T0.1, T0.2, T0.3 | {{module/files}} | {{one command or test file}} | S/M/L |
+| 1 | T1.1 | — | G1 | the seam everything else uses |
 
-<!-- /profile:prototype -->
-- ☐ **T0.1 {{Title}}.** {{Requirement, precise enough that a verifier can quote
-  it and say met / unmet.}} *Small-scale test:* {{the test that would fail if the
-  behaviour were broken, naming the test target.}}
+**Questions answered for this phase:** Q-… ; none open.
+**Fixtures and data:** {{which exist, which the phase must create}}.
+**Traps and findings:** {{found once, so the run does not rediscover them}}.
 
-**Phase exit:** {{an observable, runnable criterion — a command and what it must
-print — not a feeling.}} Checked by `scripts/phase0-gate.sh`.
+### Subphase 1A — {{title}}
+
+- ☐ **T1.1 {{Title}}.** {{Requirement, precise enough that a verifier can quote
+  it and say met / partly / unmet.}} *Small test:* {{the demonstration test,
+  naming its target.}}
+
+### Subphase 1B — {{title}}
+
+- ☐ **T1.2 {{Title}}.** …
 
 ---
 
-## Settled decisions
+# Harnessing
 
-| # | Decision | Reason |
-| --- | --- | --- |
-| D1 | **{{decision}}** | {{why; the measurement behind it; who ruled and when; what would reopen it}} |
+Outline — detailed after the prototype exit. Input: the *Harnessing* column
+above, the `mode: harnessing` entries in `FEATURES.md`, the prototype backlog.
+
+## Phase 3 — {{Title}}
+
+- {{scope in a line or two; tasks written when the phase is planned in detail}}
+
+---
+
+# Production
+
+Outline — detailed after harnessing.
+
+## Phase 5 — {{Title}}
+
+- {{…}}

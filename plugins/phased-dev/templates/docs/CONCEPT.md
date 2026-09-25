@@ -1,59 +1,44 @@
 # Concept
 
-Written before any specification. It answers *why* and *what for*; the *what
-exactly* is `CLAUDE.md` (invariants) and `IMPLEMENTATION_PLAN.md` (tasks).
+<!--
+Written by the owner, in your own words. This is the starting point: everything
+else is derived from it, and nothing derived may contradict it without your
+agreement. Free-form notes are fine — the `start` skill reads them, points out
+what is missing, and turns the gaps into questions. The headings below are the
+ones it looks for; skip any you cannot answer yet.
+-->
 
 ## Purpose
 
-{{One paragraph: what the program does and who consumes its output.}}
+What should the software do, and who or what uses its output?
 
-## The question
-<!-- profile:prototype -->
-{{The single question this prototype exists to answer, phrased so that it has a
-yes/no or a number as its answer. E.g. "Can a from-scratch decoder reproduce the
-reference's records on the 20-capture corpus at ≥10x its throughput?"}}
+## Why
 
-**Answered when:** {{the observable result that settles it — the final phase's
-exit criterion.}}
-
-Everything built serves this question. Anything that does not is parked in
-`OUT_OF_SCOPE.md`.
-<!-- /profile:prototype -->
-<!-- profile:production -->
-{{The outcome that makes this release worth shipping, stated so it can be
-checked.}}
-<!-- /profile:production -->
+The reason it is worth building — a new capability, a faster version of
+something that exists, a question to answer.
 
 ## The authority
 
-{{What is normative: reference implementation, standard, golden outputs. Where
-its copy lives. Which version produced any goldens.}}
+If there is a reference implementation, a standard, or expected outputs that
+decide what "correct" means, name it and say where it is.
 
-## Priorities when they conflict
+## Must do
 
-1. {{prime directive}}
-2. Never crash, never break the output contract, never lie in the output.
-3. Functionality and simplicity.
-4. {{speed / footprint / ...}}
+- …
 
-## In scope
+## Must not do / out of scope
 
-- {{capability}}
+- …
 
-## Out of scope
+## First milestone
 
-- {{capability}} — {{why}}. (Prototype: each has an `OOS-n` entry in
-  `OUT_OF_SCOPE.md`.)
+What would a working end-to-end prototype demonstrate?
 
-## Constraints
+## Constraints and preferences
 
-- Platform: {{target; what must stay reachable}}
-- Dependencies: {{policy}}
-- Data: {{what test data exists, whether it can be committed}}
+Platform, language, libraries, deployment, data that can or cannot be shared —
+whatever you already know.
 
-## Open questions for the owner
+## Open questions
 
-Numbered; each is closed by a dated ruling copied into the plan's *Settled
-decisions*.
-
-1. {{question}}
+Anything you have not decided.
