@@ -270,6 +270,9 @@ if (ONLY) {
 }
 
 if (!GROUPS && scope.batches && scope.batches.length) GROUPS = scope.batches
+// Tasks the caller supplied by hand were chosen together, so under prototype
+// they are one batch unless the caller grouped them otherwise.
+if (!GROUPS && PROTO && args && args.tasks) GROUPS = [tasks.map(t => t.id)]
 if (PROTO && !GROUPS) {
   // Batching is planned, not improvised: a prototype phase without a Batches
   // table is a planning gap, and running it per task is the expensive default.

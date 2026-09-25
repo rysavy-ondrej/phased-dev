@@ -46,8 +46,9 @@ write the briefs yourself and pass them:
 
 The brief is only as good as what you put in it: quote the requirement
 verbatim and name the code it extends, or the implementer builds a parallel
-scheme. Passing `tasks` also bypasses the plan's Batches table, so for a
-prototype pass `groups` too when there is more than one task. For a single task
+scheme. Passing `tasks` also bypasses the plan's Batches table: under the
+prototype profile the supplied tasks run as **one batch**, so pass `groups` if
+they should be split. For a single task
 with no need to run unattended, prefer mode B below, which skips both Scope and
 the implementer agent.
 
