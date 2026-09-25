@@ -7,6 +7,9 @@ phased implementation and a finished product. Packaged as a Claude Code plugin.
 Extracted from the maestro-enjoy project, where every rule was added after a
 measured failure (`plugins/phased-dev/skills/method/references/lessons.md`).
 
+**New here?** [HOWTO.md](HOWTO.md) walks through a project from the first concept
+note to a pushed phase, step by step.
+
 ## Install
 
 phased-dev depends on the [caveman](https://github.com/JuliusBrussee/caveman)
