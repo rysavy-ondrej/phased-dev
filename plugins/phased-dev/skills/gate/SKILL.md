@@ -22,7 +22,8 @@ add the check now and **prove it bites**.
 
 ## 2. Comprehensive test — judgement
 
-By an agent (or yourself), high effort, "be hard to satisfy":
+By an agent (or yourself), high effort, on the session's model — never a
+smaller one — "be hard to satisfy":
 
 1. **The phase exit criterion** on the real data, all of it. Prototype: the
    demonstration runs and shows what it claims. Harnessing: the conformance
@@ -49,8 +50,10 @@ Actual commands and real output, not paraphrase. Fix nothing here.
   complexity; tests; robustness; conformance) in parallel,
   then a completeness critic given all findings: what did everyone miss?
 
-The lenses are general-purpose agents with phased-dev's prompts; a caveman
-reviewer may add an opinion but is not a lens.
+The lenses are general-purpose agents with phased-dev's prompts, on the
+session's model; a caveman reviewer may add an opinion but is not a lens. Triage
+(step 4, checking findings against the code) and drafting the phase report
+(step 5) may run on `MODEL_ROUTINE`. The owner decisions stay with the session.
 
 A lens that died has not reported "nothing"; the gate waits for it (see *Pausing*
 in the `implement` skill).
@@ -98,8 +101,9 @@ Commit it with the STATUS update below, tell the owner where it is, and show the
 
 - `docs/STATUS.md`: the phase row — what is established (with numbers), what the
   gate cannot see yet, what the next phase inherits; a short *what it cost and
-  what it taught* (repair rounds, the defect that recurred — if one did, name the
-  rule in `CLAUDE.md`). Clear *Current run*. Move long narrative to
+  what it taught* (repair rounds; `routine` tasks and how many were escalated,
+  since many escalations mean the tier rules are too generous; the defect that
+  recurred — if one did, name the rule in `CLAUDE.md`). Clear *Current run*. Move long narrative to
   `docs/history/phase-<N>.md`.
 - Before the push, `scripts/check-env.sh git` shows no `FAIL` (signed in, a
   GitHub `origin` the account can reach); fix with `git-setup`.

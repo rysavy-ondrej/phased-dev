@@ -50,6 +50,8 @@ put to the owner. See `plugins/phased-dev/skills/method/references/caveman.md`.
 4. **Phases** — prepare (task order, questions answered) → implement (per task:
    tests, **commit**, independent verifier with suggested repairs, ☑) → gate
    (tests, review, **phase report** with how to try it) → **push**.
+   Routine tasks are implemented by a smaller model. Verification and review
+   always use the strongest one.
 
 | Mode | Purpose |
 | --- | --- |

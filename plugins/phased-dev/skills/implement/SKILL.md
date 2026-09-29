@@ -28,6 +28,35 @@ hardening (`feature`).
   task and returns reproduced problems, **each with a suggested repair**. It
   never edits code.
 
+## Models
+
+The group's tier (the *Preparation* table) picks the implementer's model;
+nothing else about the loop changes (`CLAUDE.md` → *Models*):
+
+| Step | `routine` group | `hard` group |
+| --- | --- | --- |
+| implement, repair round 1 | `MODEL_ROUTINE` | session model |
+| repair round 2 onwards (escalated) | session model | session model |
+| verify, recheck | session model | session model |
+| mark ☑ | `MODEL_MECHANICAL` | `MODEL_MECHANICAL` |
+
+- **In the main session:** implement `hard` groups yourself. Hand a `routine`
+  group to one Agent with `model` set to `MODEL_ROUTINE`. Give it the tasks'
+  requirements quoted in full, the code they extend and the traps from the
+  *Preparation* section. Tell it to follow steps 1–6 below and return the commit
+  ids. You run the verifier, not the implementer.
+- **Never give the verifier or the recheck a smaller model**, and don't let an
+  implementer of any tier verify its own work. If the session itself runs a
+  smaller model, say so to the owner before starting, because the whole
+  safety net is then weaker.
+- **Escalation:** a `routine` unit that still has problems after repair round 1
+  gets its remaining rounds on the session's model. In prototype mode, which has
+  one round, it gets one extra round for this. Say so in the progress line
+  (`T2.3 ☑ (a1b2c3d, 2 repairs, escalated)`), and change the task's tier to
+  `hard` in the Preparation table, so a retry doesn't repeat the attempt.
+- `MODEL_ROUTINE=` left empty turns tiers off: everything runs on the session's
+  model.
+
 ## The loop
 
 Work through the implementation groups in the prepared order. In each group,
@@ -54,7 +83,7 @@ previous one is ☑.
    wins over any commit-message skill (e.g. `caveman-commit`).
 6. **Audit**: `scripts/task-audit.sh T2.3` must exit 0; fix with a further
    `T2.3:` commit.
-7. **Verify**: spawn one Agent (general-purpose, high effort) with the prompt in
+7. **Verify**: spawn one Agent (general-purpose, high effort, session model) with the prompt in
    `references/verifier-prompt.md` for the unit's mode — not a caveman reviewer,
    whose one-line findings lack the reproduction and the repair. A verifier that
    returns nothing verified nothing: re-run it.
@@ -106,7 +135,9 @@ tree is clean.
 agents, so use it only when the user asks for an unattended run.
 `{phase: 2}` runs the phase in the prepared order; `{phase: 2, subphase: "2A"}`
 one subphase; `{only: ["T2.3"]}` named tasks; `{skipReview: true}` lands tasks
-without the gate. When an agent dies (typically a limit), the workflow returns
+without the gate. It applies the *Models* table on its own, using the models
+from `scripts/method.conf`. `{models: {routine: "sonnet", mechanical: "haiku"}}`
+overrides them for one run, and `""` means the session model. When an agent dies (typically a limit), the workflow returns
 `paused` with the next step instead of a verdict. Resume with Workflow's
 `resumeFromRunId` in the same session (completed agents are replayed from cache),
 or later with the `resume` skill, which reads git.

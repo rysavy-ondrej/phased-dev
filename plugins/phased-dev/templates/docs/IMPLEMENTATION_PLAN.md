@@ -47,9 +47,9 @@ phase is not ready.
 
 Prepared: {{date}}
 
-| # | Task | Depends on | Implementation group | Why here |
-| --- | --- | --- | --- | --- |
-| 1 | T1.1 | — | G1 | builds the contracts everything else uses (walking skeleton) |
+| # | Task | Depends on | Implementation group | Tier | Why here |
+| --- | --- | --- | --- | --- | --- |
+| 1 | T1.1 | — | G1 | hard | builds the contracts everything else uses (walking skeleton) |
 
 **Questions answered for this phase:** Q-… ; none open.
 **Fixtures and data:** {{which exist, which the phase must create}}.

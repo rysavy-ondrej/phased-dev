@@ -43,7 +43,26 @@ own. In prototype mode, one verifier takes a whole group; in the other modes
 verification is per task.
 
 Write the *Preparation* table under the phase: order, task, depends on, group,
-why here. Reorder the task lines to match if needed.
+tier, why here. Reorder the task lines to match if needed.
+
+**Tier: which model implements it.** Every task is `routine` or `hard`
+(`CLAUDE.md` → *Models*). A `routine` task is implemented by the smaller
+`MODEL_ROUTINE`; a `hard` one by the session's model. Verification is the same
+for both. A task is **hard** if any of these holds:
+- it defines or changes a contract, or is foundational (a group of its own);
+- it carries a correctness, memory, security or concurrency bound;
+- its core is an algorithm, a parser of untrusted input, or a numeric method
+  where a plausible-looking answer can be wrong;
+- it is a measurement task (`measure`);
+- the code it extends is tangled enough that reading it right is the work;
+- an earlier attempt at it was escalated or blocked.
+
+Otherwise it is **routine**: the pattern, contract and target code already exist,
+and the task follows them. For example: another variant of an existing
+handler, wiring a finished component in, a CLI option over existing logic,
+error messages or configuration. **When unsure, `hard`.** A group takes the
+highest tier of its tasks, since one agent implements the whole group. Keeping
+routine tasks together in their own groups is what saves the tokens.
 
 **Pending measurements.** A task that depends on an undecided `M-n` is ordered
 after its measurement task, and the owner's decision on the report is a
@@ -90,5 +109,6 @@ never pass on empty output.
 
 Add `Prepared: <YYYY-MM-DD>` under the phase heading (`gate.sh` requires it),
 update `docs/STATUS.md` → *Current run*, commit as `P<N>: prepare phase <N>`.
-Tell the owner the order, the groups, and an estimate of agent runs: tasks ×
-(implementer share + verifier) + gate + review. Then `implement`.
+Tell the owner the order, the groups with their tiers, and an estimate of agent
+runs: tasks × (implementer share + verifier) + gate + review, saying how many
+implementer runs go to `MODEL_ROUTINE`. Then `implement`.
