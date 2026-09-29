@@ -1,7 +1,7 @@
 export const meta = {
   name: 'run-phase',
   description: 'Implement one prepared phase (or subphase) of docs/IMPLEMENTATION_PLAN.md unattended: tasks in the prepared order, one commit each, independent verification with suggested repairs, then the comprehensive phase test, review and triage. Pauses cleanly when an agent dies (e.g. a usage limit).',
-  whenToUse: 'Args {phase: N}. Optional: {subphase: "2A"} run one subphase (checkpoint, no review); {only: ["T2.3"]} named tasks; {tasks: [{id, slug, spec, smallScale}], mode, notes} skip the Scope agent; {skipReview: true}; {repairRounds: n}.',
+  whenToUse: 'Args {phase: N}. Optional: {subphase: "2A"} run one subphase (checkpoint, no review); {only: ["T2.3"]} named tasks; {tasks: [{id, slug, spec, smallScale}], mode, notes} skip the Scope agent; {skipReview: true}; {repairRounds: n}; {models: {routine, mechanical}} overrides scripts/method.conf ("" = session model).',
   phases: [
     { title: 'Scope', detail: 'read the prepared phase: order, groups, mode, task states' },
     { title: 'Implement' },
@@ -48,6 +48,7 @@ const SCOPE_SCHEMA = {
           slug: { type: 'string' },
           state: { type: 'string', enum: ['todo', 'implemented'], description: '☐ = todo, ◐ = implemented (committed, unverified)' },
           group: { type: 'string', description: 'implementation group from the Preparation table, e.g. G2' },
+          tier: { type: 'string', enum: ['routine', 'hard'], description: "the Tier column of the Preparation table; 'hard' if missing" },
           spec: { type: 'string', description: 'the requirement quoted verbatim, plus context the implementer needs' },
           smallScale: { type: 'string', description: 'the small test, naming its target' },
         },
@@ -57,8 +58,14 @@ const SCOPE_SCHEMA = {
     blockingQuestions: { type: 'array', items: { type: 'string' }, description: 'open Q-n affecting this phase that are marked blocking' },
     phaseExit: { type: 'string' },
     notes: { type: 'string' },
+    models: {
+      type: 'object',
+      description: 'MODEL_ROUTINE and MODEL_MECHANICAL from scripts/method.conf, verbatim; "" when unset or empty',
+      properties: { routine: { type: 'string' }, mechanical: { type: 'string' } },
+      required: ['routine', 'mechanical'],
+    },
   },
-  required: ['prepared', 'mode', 'tasks', 'blockingQuestions', 'phaseExit'],
+  required: ['prepared', 'mode', 'tasks', 'blockingQuestions', 'phaseExit', 'models'],
 }
 const IMPL_SCHEMA = {
   type: 'object',
@@ -258,15 +265,16 @@ function blocked(stage, detail, extra) {
 phase('Scope')
 let scope
 if (args && args.tasks) {
-  scope = { prepared: true, mode: args.mode || 'prototype', tasks: args.tasks.map(t => ({ state: 'todo', ...t })), blockingQuestions: [], phaseExit: args.phaseExit || '(supplied by caller)', notes: args.notes || '' }
+  scope = { prepared: true, mode: args.mode || 'prototype', tasks: args.tasks.map(t => ({ state: 'todo', tier: 'hard', ...t })), blockingQuestions: [], phaseExit: args.phaseExit || '(supplied by caller)', notes: args.notes || '', models: { routine: '', mechanical: '' } }
 } else {
   scope = await agent(`Read ${REPO}/docs/IMPLEMENTATION_PLAN.md, ${REPO}/docs/QUESTIONS.md and ${REPO}/CLAUDE.md, and extract what is needed to run **Phase ${PHASE}${SUBPHASE ? `, subphase ${SUBPHASE} only` : ''}**.
 
 - prepared: whether the phase has a "Prepared: <date>" line.
 - mode: from the "# Prototype" / "# Harnessing" / "# Production" heading the phase sits under.
-- tasks: in the order of the phase's Preparation table (plan order if there is none), EXCLUDING tasks marked ☑. For each: id; slug; state (☐ → todo, ◐ → implemented); group (from the Preparation table); spec — the requirement QUOTED VERBATIM plus the context the implementer needs (the invariant or spec section it touches, the code it extends — read src/ so it extends rather than duplicates); smallScale — the small test, naming its target.
+- tasks: in the order of the phase's Preparation table (plan order if there is none), EXCLUDING tasks marked ☑. For each: id; slug; state (☐ → todo, ◐ → implemented); group and tier (from the Preparation table; tier 'hard' if the column is missing); spec — the requirement QUOTED VERBATIM plus the context the implementer needs (the invariant or spec section it touches, the code it extends — read src/ so it extends rather than duplicates); smallScale — the small test, naming its target.
 - blockingQuestions: open questions in docs/QUESTIONS.md marked blocking that affect this phase.
 - phaseExit: quoted. notes: the Preparation section's findings and traps.
+- models: MODEL_ROUTINE and MODEL_MECHANICAL from scripts/method.conf, verbatim ("" if absent or empty).
 ${ONLY ? `Return ONLY these tasks: ${ONLY.join(', ')} — even if marked ☑.` : ''}
 You may run \`scripts/progress.sh\` to cross-check the task states.`, { label: `scope:${SUBPHASE ? SUBPHASE : "P" + PHASE}`, phase: 'Scope', schema: SCOPE_SCHEMA, effort: 'medium' })
   if (!scope) return paused('scope', 'the scope agent returned nothing')
@@ -277,6 +285,14 @@ if (scope.blockingQuestions && scope.blockingQuestions.length) return blocked('s
 
 const MODE = scope.mode
 const MAX_REPAIRS = (args && args.repairRounds) || (MODE === 'prototype' ? 1 : 3)
+
+// Models by role (CLAUDE.md -> Models). Verifier, recheck, phase test and review
+// lenses never get a model option: they always run on the session's model.
+const MODELS = { ...(scope.models || {}), ...((args && args.models) || {}) }
+const ROUTINE = MODELS.routine || null
+const MECHANICAL = MODELS.mechanical || null
+const withModel = (model, opts) => (model ? { ...opts, model } : opts)
+if (ROUTINE || MECHANICAL) log(`Models: routine tasks → ${ROUTINE || 'session'}, mechanical steps → ${MECHANICAL || 'session'}; verification and review → session`)
 let tasks = scope.tasks
 if (ONLY) tasks = tasks.filter(t => ONLY.includes(t.id))
 if (!tasks.length) log(`Phase ${PHASE}${SUBPHASE || ''}: no unverified task left.`)
@@ -286,10 +302,11 @@ const groups = []
 for (const t of tasks) {
   const key = t.group || t.id
   let g = groups.find(x => x.key === key)
-  if (!g) groups.push(g = { key, tasks: [] })
+  if (!g) groups.push(g = { key, tasks: [], tier: 'routine' })
   g.tasks.push(t)
+  if (t.tier !== 'routine') g.tier = 'hard'   // one agent implements the group: it takes the highest tier
 }
-log(`Phase ${PHASE}${SUBPHASE || ''} (${MODE}): ${tasks.length} task(s) in ${groups.length} group(s): ${groups.map(g => g.tasks.map(t => t.id).join('+')).join(' | ')}`)
+log(`Phase ${PHASE}${SUBPHASE || ''} (${MODE}): ${tasks.length} task(s) in ${groups.length} group(s): ${groups.map(g => g.tasks.map(t => t.id).join('+') + (g.tier === 'routine' ? ' (routine)' : '')).join(' | ')}`)
 
 const total = tasks.length
 for (const g of groups) {
@@ -299,7 +316,8 @@ for (const g of groups) {
   // --- implement: one agent per group, one commit per task ------------------
   if (todo.length) {
     phase('Implement')
-    const impl = await agent(implPrompt(todo, MODE, scope.notes, prior), { label: `impl:${todo.map(t => t.id).join('+')}`, phase: 'Implement', schema: IMPL_SCHEMA })
+    const routine = g.tier === 'routine' && ROUTINE
+    const impl = await agent(implPrompt(todo, MODE, scope.notes, prior), withModel(routine ? ROUTINE : null, { label: `impl:${todo.map(t => t.id).join('+')}${routine ? ` (${ROUTINE})` : ''}`, phase: 'Implement', schema: IMPL_SCHEMA }))
     if (!impl) return paused('implement', `the implementer for ${todo.map(t => t.id).join(', ')} returned nothing; tasks it committed are ◐ and will be verified on resume`)
     ;(impl.questions || []).forEach(q => questions.push(q))
     ;(impl.features || []).forEach(f => features.push(f))
@@ -323,12 +341,19 @@ for (const g of groups) {
     if (!v) return paused('verify', `the verifier for ${label} returned nothing — ${label} is committed (◐) and UNVERIFIED`)
     keep(v)
 
+    // A routine unit repairs once on ROUTINE; any further round is escalated to the
+    // session's model. With a single round (prototype), escalation adds one.
+    const routineUnit = g.tier === 'routine' && !!ROUTINE
+    const maxRounds = MAX_REPAIRS + (routineUnit && MAX_REPAIRS === 1 ? 1 : 0)
     let round = 0
+    let escalated = false
     let problems = v.pass ? [] : v.problems
-    while (problems.length && round < MAX_REPAIRS) {
+    while (problems.length && round < maxRounds) {
       round++
-      log(`${label}: ${problems.length} problem(s), repair round ${round}/${MAX_REPAIRS}`)
-      const r = await agent(repairPrompt(ids, problems, round), { label: `repair${round}:${label}`, phase: 'Repair', schema: IMPL_SCHEMA })
+      const cheap = routineUnit && round === 1
+      if (routineUnit && round === 2) { escalated = true; log(`${label}: escalated to the session model`) }
+      log(`${label}: ${problems.length} problem(s), repair round ${round}/${maxRounds}`)
+      const r = await agent(repairPrompt(ids, problems, round), withModel(cheap ? ROUTINE : null, { label: `repair${round}:${label}${cheap ? ` (${ROUTINE})` : ''}`, phase: 'Repair', schema: IMPL_SCHEMA }))
       if (!r) return paused(`repair ${round}`, `the repair agent for ${label} returned nothing`)
       if (r.blockingQuestion) return blocked(`repair ${round}`, `blocking question ${r.blockingQuestion}`, { question: r.blockingQuestion })
       v = await agent(recheckPrompt(ids, problems, round), { label: `recheck${round}:${label}`, phase: 'Recheck', schema: VERDICT_SCHEMA, effort: 'high' })
@@ -340,17 +365,17 @@ for (const g of groups) {
 
     // --- record: ◐ → ☑, one commit per task ---------------------------------
     phase('Record')
-    const rec = await agent(`In ${REPO}, verification of ${ids.join(', ')} passed. For each id, in docs/IMPLEMENTATION_PLAN.md change its marker from ◐ to ☑ (that line only) and commit with subject "<id>: verified" and the Co-Authored-By trailer — one commit per id. Then run scripts/task-audit.sh for each id; it must exit 0. Change nothing else. Return ok=true when done.`, { label: `record:${label}`, phase: 'Record', schema: DONE_SCHEMA, effort: 'low' })
+    const rec = await agent(`In ${REPO}, verification of ${ids.join(', ')} passed. For each id, in docs/IMPLEMENTATION_PLAN.md change its marker from ◐ to ☑ (that line only)${escalated ? `, and in the phase's Preparation table change its Tier from routine to hard (it needed escalation)` : ''}, and commit with subject "<id>: verified" and the Co-Authored-By trailer — one commit per id. Then run scripts/task-audit.sh for each id; it must exit 0. Change nothing else. Return ok=true when done.`, withModel(MECHANICAL, { label: `record:${label}`, phase: 'Record', schema: DONE_SCHEMA, effort: 'low' }))
     if (!rec || !rec.ok) return paused('record', `${label} passed verification but was not marked ☑ — mark it on resume`)
-    ids.forEach(id => done.push({ id, repairRounds: round }))
-    log(`${label} ☑ (${round} repair round(s)) — ${done.length}/${total} this run`)
+    ids.forEach(id => done.push({ id, tier: g.tier, repairRounds: round, escalated }))
+    log(`${label} ☑ (${round} repair round(s)${escalated ? ', escalated' : ''}) — ${done.length}/${total} this run`)
   }
 }
 
 if (SUBPHASE) {
   // A subphase ends in a checkpoint, not a review or a push.
   phase('Phase test')
-  const cp = await agent(`In ${REPO}, run \`scripts/gate.sh ${SUBPHASE}\` and return its last 30 lines in gate_script verbatim; pass = exit status 0; problems = its FAIL lines; transcript = the command and output. Fix nothing.`, { label: `checkpoint:${SUBPHASE}`, phase: 'Phase test', schema: PHASE_TEST_SCHEMA, effort: 'low' })
+  const cp = await agent(`In ${REPO}, run \`scripts/gate.sh ${SUBPHASE}\` and return its last 30 lines in gate_script verbatim; pass = exit status 0; problems = its FAIL lines; transcript = the command and output. Fix nothing.`, withModel(MECHANICAL, { label: `checkpoint:${SUBPHASE}`, phase: 'Phase test', schema: PHASE_TEST_SCHEMA, effort: 'low' }))
   if (!cp) return paused('checkpoint', `the checkpoint for ${SUBPHASE} returned nothing`)
   return { phase: PHASE, subphase: SUBPHASE, mode: MODE, completed: done, questions, features, observations, checkpoint: cp }
 }
@@ -413,7 +438,7 @@ Review findings (${findings.length}):\n${JSON.stringify(findings, null, 2)}
 2. Defects or improvements in what was built → one line each in docs/BACKLOG.md under "## Phase ${PHASE}": severity, file/symbol, what is wrong, the later task that should settle it.
 3. Features or hardening not built → docs/FEATURES.md entries (Disposition: proposed, or mode: harnessing/production for skipped hardening).
 4. Blockers are NOT triaged — list them in your summary; they become remediation tasks.
-Commit once: "P${PHASE}: triage the phase review" with the trailer. Fix nothing else. Return counts: in, dropped as fixed, merged, landed in each file.`, { label: 'triage', phase: 'Triage', effort: 'medium' })
+Commit once: "P${PHASE}: triage the phase review" with the trailer. Fix nothing else. Return counts: in, dropped as fixed, merged, landed in each file.`, withModel(ROUTINE, { label: 'triage', phase: 'Triage', effort: 'medium' }))
   if (!triage) return paused('triage', 'the triage agent returned nothing — re-run it on resume')
 }
 
@@ -422,12 +447,12 @@ const gateOk = !!phaseTest.pass && blockers.length === 0
 const report = await agent(`Write the phase report for Phase ${PHASE} (mode: ${MODE}) of ${REPO}, following the template in docs/reports/TEMPLATE.md: docs/reports/<PROJECT>_phase_${PHASE}.md, with PROJECT from scripts/method.conf. Create docs/reports/ if needed.
 
 Gate result: ${gateOk ? 'passed' : 'FAILED — say so at the top: ' + JSON.stringify(phaseTest.problems.concat(blockers.map(b => b.summary)))}.
-Tasks done in this run: ${done.map(d => d.id).join(', ') || '(none new)'}. Questions raised: ${questions.join(', ') || 'none'}. Features recorded: ${features.join(', ') || 'none'}.
+Tasks done in this run: ${done.map(d => d.id).join(', ') || '(none new)'}. Routine tasks: ${done.filter(d => d.tier === 'routine').length}, of which escalated: ${done.filter(d => d.escalated).map(d => d.id).join(', ') || 'none'} (put this under what it cost). Questions raised: ${questions.join(', ') || 'none'}. Features recorded: ${features.join(', ') || 'none'}.
 
 - "Try it": the exact build/run commands from a clean build, and 2-5 examples. RUN every command now on this commit and paste the real output (trim long output with …). Never include an example you did not run.
 - Specified vs implemented: take the external interface from docs/SPEC.md (CLI synopsis and options, API, endpoints, screens) and give every item its status — works / works but unvalidated / planned (which phase or mode) / refused until then (which F-n) / not started.
 - Tests and evidence from the gate; known limitations; open items; what the next phase adds.
-Link the report from docs/STATUS.md. Commit both: "P${PHASE}: phase ${PHASE} report" with the Co-Authored-By trailer. Do not push. Return the report's path.`, { label: `report:P${PHASE}`, phase: 'Report', effort: 'medium' })
+Link the report from docs/STATUS.md. Commit both: "P${PHASE}: phase ${PHASE} report" with the Co-Authored-By trailer. Do not push. Return the report's path.`, withModel(ROUTINE, { label: `report:P${PHASE}`, phase: 'Report', effort: 'medium' }))
 if (!report) return paused('report', 'the report agent returned nothing — write the phase report on resume (gate skill, step 5)')
 
 return {

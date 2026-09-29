@@ -25,6 +25,9 @@
 
 Unattended: *"Run the run-phase workflow for phase N."* (more agents, more tokens)
 
+Models: `routine` tasks → Sonnet, ☑ and checkpoints → Haiku, everything else and
+**all verification** → your session's model (`scripts/method.conf`).
+
 ## Modes — stages of the project
 
 | Mode | Goal | Tests per task | Review |

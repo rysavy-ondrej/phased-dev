@@ -317,6 +317,21 @@ open question that affects the phase and asks you now**, not halfway through a
 task. It ends with `Prepared: <date>` in the plan. A phase without it is not
 started.
 
+It also gives each task a **tier**, which decides the model that implements
+it:
+- **`routine`** tasks follow a pattern and contract that already exist, such as
+  another handler, a CLI option or wiring in a finished component. They go to a
+  smaller model (Sonnet by default).
+- **`hard`** tasks go to your session's model. That covers contracts,
+  algorithms, parsers of untrusted input, anything with a correctness or
+  security bound, and anything the agent is unsure about.
+
+Verification and review always use your session's model, whatever the tier. A
+routine task that fails its first repair is handed to the stronger model. You
+can change the tiers in the *Preparation* table, and the models in
+`scripts/method.conf` (`MODEL_ROUTINE`, `MODEL_MECHANICAL`; leave them empty to
+use one model for everything).
+
 ---
 
 ## 8. Implement the phase

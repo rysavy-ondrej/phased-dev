@@ -162,6 +162,14 @@ exists can fail · one commit per task · failure is a stop.
   (markers, commits), so at a usage limit: finish or cleanly abandon the step,
   record the pause and reset time in `docs/STATUS.md` → *Current run*, stop — no
   retry loop. `resume` verifies ◐ tasks first, then continues.
+- **Models.** Each task has a tier in the phase's *Preparation* table. The
+  session's model plans, verifies, reviews and implements `hard` tasks;
+  `routine` tasks are implemented by `MODEL_ROUTINE`, and marking ☑ or running a
+  checkpoint by `MODEL_MECHANICAL` (`scripts/method.conf`). The verifier,
+  recheck, comprehensive test and review lenses are **never** given a smaller
+  model: a cheaper implementer is acceptable only because they are not. A
+  `routine` task still failing after its first repair is escalated to the
+  session's model.
 - **Tokens.** Mechanical checks are scripts (`task-audit.sh`, `gate.sh`,
   `progress.sh`, `check-env.sh`); never re-derive them. Targeted tests while
   working, the full suite once per task, determinism only at the gate.
