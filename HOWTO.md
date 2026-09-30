@@ -387,6 +387,13 @@ waiting for you, and the next step. It then offers to take your answers to the
 open questions. The same numbers come from the shell with `scripts/progress.sh`,
 and `scripts/progress.sh questions` lists just the questions.
 
+**Watching a phase run.** `scripts/progress.sh run` shows the current phase as
+a panel. The top lists each subphase and its tasks, with the trail of agents
+each task went through (`impl✓ verify✗ repair1✓ recheck1✓ record✓`). Below that
+is every agent grouped by step, with its model, tokens and time. The agent
+shows this panel at the end of each implementation group, and whenever you ask
+how it is going.
+
 **Questions come up.** Not everything can be foreseen. The agent records each one
 in `docs/QUESTIONS.md`:
 

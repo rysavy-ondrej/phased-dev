@@ -12,6 +12,7 @@ Report from the repository, not from memory. Read-only: change nothing.
 ```bash
 scripts/progress.sh            # tasks per mode / phase / subphase, counts, next step
 scripts/progress.sh questions  # open questions, blocking marked
+scripts/progress.sh run        # the current phase: tasks with their agent trails, agents by step
 git log --oneline -5
 git status --porcelain
 ```
@@ -54,6 +55,9 @@ Keep it short and in this order:
    with a `proposed` disposition, a push waiting for confirmation, a mode
    allocation not yet confirmed.
 5. **Next step**: from `scripts/progress.sh next`.
+
+During implementation, put the output of `scripts/progress.sh run` in a code
+block after point 1. Leave it out if it shows no agents.
 
 Offer to answer the open questions now (AskUserQuestion, one round) — answering
 them is usually the owner's most valuable next action.

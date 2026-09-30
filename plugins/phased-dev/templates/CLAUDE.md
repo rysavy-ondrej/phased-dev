@@ -158,7 +158,9 @@ exists can fail · one commit per task · failure is a stop.
 - **Failure is a stop.** Report what was attempted, the exact output, the likely
   cause, the decision needed. Never commit red, weaken a test, call a real diff a
   divergence, skip ahead or silently narrow a task.
-- **Progress and pauses.** One progress line after every task. All state is in git
+- **Progress and pauses.** One progress line after every task; every agent
+  logged with `scripts/progress.sh log`, and its run panel
+  (`scripts/progress.sh run`) shown after each group. All state is in git
   (markers, commits), so at a usage limit: finish or cleanly abandon the step,
   record the pause and reset time in `docs/STATUS.md` → *Current run*, stop — no
   retry loop. `resume` verifies ◐ tasks first, then continues.

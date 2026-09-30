@@ -24,6 +24,7 @@
 | `resume` | continue after a usage limit or a break | — |
 
 Unattended: *"Run the run-phase workflow for phase N."* (more agents, more tokens)
+Run panel (tasks, agents, models, tokens): `scripts/progress.sh run`
 
 Models: `routine` tasks → Sonnet, ☑ and checkpoints → Haiku, everything else and
 **all verification** → your session's model (`scripts/method.conf`).
