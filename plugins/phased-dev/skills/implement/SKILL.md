@@ -97,10 +97,50 @@ previous one is ☑.
 10. **Report progress** — one line to the user (required output, also in caveman
     mode):
     `T2.3 ☑ (a1b2c3d, 0 repairs) — 4/7 in phase 2 — next: T2.4`.
-    Update `docs/STATUS.md` → *Current run* at the end of each group.
+    At the end of each group, show the **run panel** (below) and update
+    `docs/STATUS.md` → *Current run*.
 
 At the end of a **subphase**, run `scripts/gate.sh <N><sub>` as a checkpoint.
 At the end of the **phase**, go to `gate` — the push happens there.
+
+## The run panel
+
+The owner follows the run in one view: the phase's subphases and tasks, and
+every agent that worked on them, grouped by step, with its model, tokens and
+time. `scripts/progress.sh run` prints it from the plan and a run log:
+
+```
+Phase 3 (harnessing) — 4/6 ☑ · 1 ◐ · 1 ☐ · 13 agents · 99.7k tokens · 18m17s
+
+  Subphase 3A  3/3
+    ☑ T3.24   impl✓ verify✗ repair1✓ recheck1✓ record✓
+    ☑ T3.25   impl✓ verify✓ record✓
+  Subphase 3B  1/3
+    ◐ T3.28   impl✓ verify…
+    ☐ T3.29
+
+  Agents by step
+  Implement   3/3    ✓ impl:T3.24+T3.25           sonnet     22.0k   4m10s
+  Verify      2/4    ✗ verify:T3.24               opus        9.8k   1m12s
+  …
+```
+
+- **Log every agent** as soon as it returns (and when it starts, if it runs in
+  the background):
+  `scripts/progress.sh log <label> <model> <ok|fail|died|running> [tokens] [time]`.
+  Name labels as the workflow does: `impl:T3.24+T3.25`, `verify:T3.24`,
+  `repair1:T3.24`, `recheck1:T3.24`, `record:T3.24`, `checkpoint:3A`. Take
+  tokens and time from what the Agent result reports; write `-` when it
+  reports none. `fail` means the verifier found problems. `died` means the
+  agent returned nothing (a limit). Work you do yourself in the main session
+  is not an agent: the task's commit shows it.
+- **Show the panel**, in a code block, at the end of each group, after a
+  pause, and whenever the owner asks how it is going. Between groups, the
+  one-line progress report is enough.
+- The log is kept in the git directory, so it never makes the tree dirty and
+  never needs committing. The plan's markers remain the state; the panel only
+  makes them easier to follow. `scripts/progress.sh log --clear <N>` forgets
+  a phase's log, for example before re-running it from scratch.
 
 ## Measurement tasks
 
@@ -140,7 +180,9 @@ from `scripts/method.conf`. `{models: {routine: "sonnet", mechanical: "haiku"}}`
 overrides them for one run, and `""` means the session model. When an agent dies (typically a limit), the workflow returns
 `paused` with the next step instead of a verdict. Resume with Workflow's
 `resumeFromRunId` in the same session (completed agents are replayed from cache),
-or later with the `resume` skill, which reads git.
+or later with the `resume` skill, which reads git. The workflow has its own live
+panel of the same kind (`/workflows`). When it returns, log its agents from the
+result's `completed` list if you want them in `scripts/progress.sh run` too.
 
 For a re-run of one or two known tasks, skip its Scope agent by passing the
 briefs: `{phase: 3, tasks: [{id, slug, spec, smallScale}], notes, skipReview:
